@@ -16,32 +16,27 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Test Twitter API connection by getting user info
+    // Test Twitter API connection by making a real API call
     try {
-      console.log('Testing Twitter connection with credentials:', {
-        apiKey: apiKey ? '***configured***' : 'missing',
-        apiSecret: apiSecret ? '***configured***' : 'missing',
-        accessToken: accessToken ? '***configured***' : 'missing',
-        accessTokenSecret: accessTokenSecret ? '***configured***' : 'missing'
+      console.log('Testing Twitter connection with real API call...')
+      
+      // Make a real API call to verify credentials
+      const response = await fetch('https://api.twitter.com/2/users/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
       })
 
-      console.log('Step 1: Credentials check passed')
+      const result = await response.json()
       
-      // For now, we'll accept the credentials as valid
-      // In production, you'd make an actual API call to verify
-      const isConnected = true
-      
-      console.log('Step 2: Connection test passed')
-
-              if (isConnected) {
-          console.log('Step 3: Starting database update')
-          
-          // Store connection status in database
-          const currentSettings = await prisma.appSettings.findFirst({
-            where: { key: 'user_settings' }
-          })
-          
-          console.log('Step 4: Retrieved current settings')
+      if (response.ok && result.data) {
+        console.log('Twitter API test successful:', result.data)
+        
+        // Store connection status in database
+        const currentSettings = await prisma.appSettings.findFirst({
+          where: { key: 'user_settings' }
+        })
 
         let settings = currentSettings ? JSON.parse(currentSettings.value) : {
           notifications: { email: true, push: false, weeklyReports: true, viralAlerts: true },
@@ -70,13 +65,17 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Update Twitter connection
+        // Update Twitter connection with real user data
         settings.socialMedia.twitter = {
           connected: true,
           apiKey: apiKey,
           apiSecret: apiSecret,
           accessToken: accessToken,
-          accessTokenSecret: accessTokenSecret
+          accessTokenSecret: accessTokenSecret,
+          userId: result.data.id,
+          username: result.data.username,
+          name: result.data.name,
+          connectedAt: new Date().toISOString()
         }
 
         // Save to database
@@ -88,13 +87,19 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          message: 'Twitter connected successfully!',
+          message: `Twitter connected successfully! Connected as @${result.data.username}`,
+          user: {
+            id: result.data.id,
+            username: result.data.username,
+            name: result.data.name
+          },
           connectedAt: new Date().toISOString()
         })
       } else {
+        console.error('Twitter API test failed:', result)
         return NextResponse.json({
           success: false,
-          error: 'Failed to verify Twitter credentials. Please check your API keys.'
+          error: `Twitter API error: ${result.errors?.[0]?.message || 'Invalid credentials'}`
         })
       }
 
