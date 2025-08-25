@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config({ path: '.env.local' })
+
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
 
