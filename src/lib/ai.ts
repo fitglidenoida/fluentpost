@@ -46,6 +46,8 @@ Requirements:
 - End with a call-to-action to download FitGlide app
 - Make it clear this is about the app's functionality
 
+IMPORTANT: Respond with ONLY valid JSON. Do not include any text before or after the JSON object.
+
 Format the response as JSON with these fields:
 {
   "title": "SEO-optimized title about the app feature",
@@ -101,6 +103,8 @@ Requirements:
 - Call-to-action to download FitGlide
 - Platform-specific formatting
 
+IMPORTANT: Respond with ONLY valid JSON. Do not include any text before or after the JSON object.
+
 Format as JSON:
 {
   "content": "Full social media post text",
@@ -119,6 +123,8 @@ Requirements:
 - Include search volume estimates
 - Difficulty level (easy/medium/hard)
 - Target audience
+
+IMPORTANT: Respond with ONLY valid JSON. Do not include any text before or after the JSON object.
 
 Format as JSON:
 {
