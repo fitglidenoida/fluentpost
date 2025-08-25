@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [responses, setResponses] = useState<AIResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [creatingBlog, setCreatingBlog] = useState<string | null>(null)
+  const [creatingThread, setCreatingThread] = useState<string | null>(null)
   const [sharingToSocial, setSharingToSocial] = useState<string | null>(null)
   const [generationParams, setGenerationParams] = useState({
     type: 'blog',
@@ -153,6 +154,60 @@ export default function AdminPage() {
       alert('Error creating blog post: ' + error)
     } finally {
       setCreatingBlog(null)
+    }
+  }
+
+  const createThreadFromResponse = async (responseId: string) => {
+    setCreatingThread(responseId)
+    try {
+      const title = prompt('Enter a title for the Twitter thread:')
+      if (!title) {
+        setCreatingThread(null)
+        return
+      }
+
+      const result = await fetch('/api/threads/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aiResponseId: responseId, title }),
+      })
+
+      if (result.ok) {
+        const thread = await result.json()
+        alert(`Twitter thread created successfully!\nTweets: ${thread.thread.totalTweets}\nEstimated read time: ${thread.thread.estimatedReadTime} minutes`)
+        
+        // Ask if user wants to post the thread now
+        if (confirm('Would you like to post this thread to Twitter now?')) {
+          await postThread(thread.thread.id)
+        }
+      } else {
+        const error = await result.json()
+        alert('Error creating thread: ' + error.error)
+      }
+    } catch (error) {
+      alert('Error creating thread: ' + error)
+    } finally {
+      setCreatingThread(null)
+    }
+  }
+
+  const postThread = async (threadId: string) => {
+    try {
+      const result = await fetch('/api/threads/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId }),
+      })
+
+      if (result.ok) {
+        const data = await result.json()
+        alert(`Thread posted successfully!\nSuccessful tweets: ${data.successfulTweets}/${data.totalTweets}`)
+      } else {
+        const error = await result.json()
+        alert('Error posting thread: ' + error.error)
+      }
+    } catch (error) {
+      alert('Error posting thread: ' + error)
     }
   }
 
@@ -402,13 +457,22 @@ export default function AdminPage() {
                         Copy Content
                       </button>
                       {response.promptType === 'blog' && response.status === 'processed' && (
-                        <button 
-                          onClick={() => createBlogFromResponse(response.id)}
-                          disabled={creatingBlog === response.id}
-                          className="text-green-600 hover:text-green-800 text-sm px-2 py-1 border border-green-600 rounded disabled:opacity-50"
-                        >
-                          {creatingBlog === response.id ? 'Creating...' : '📝 Create Blog'}
-                        </button>
+                        <>
+                          <button 
+                            onClick={() => createBlogFromResponse(response.id)}
+                            disabled={creatingBlog === response.id}
+                            className="text-green-600 hover:text-green-800 text-sm px-2 py-1 border border-green-600 rounded disabled:opacity-50"
+                          >
+                            {creatingBlog === response.id ? 'Creating...' : '📝 Create Blog'}
+                          </button>
+                          <button 
+                            onClick={() => createThreadFromResponse(response.id)}
+                            disabled={creatingThread === response.id}
+                            className="text-purple-600 hover:text-purple-800 text-sm px-2 py-1 border border-purple-600 rounded disabled:opacity-50"
+                          >
+                            {creatingThread === response.id ? 'Creating...' : '🧵 Create Thread'}
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
