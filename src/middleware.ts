@@ -24,11 +24,14 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (auth API routes)
+     * - api/topics (topics API - allow public access)
+     * - api/blog-posts (blog posts API - allow public access)
+     * - api/analytics (analytics API - allow public access)
      * - auth (auth pages)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api/auth|auth|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth|api/topics|api/blog-posts|api/analytics|auth|_next/static|_next/image|favicon.ico).*)',
   ],
 }
