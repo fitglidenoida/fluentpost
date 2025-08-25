@@ -463,29 +463,35 @@ export default function AdminPage() {
                     </div>
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => navigator.clipboard.writeText(response.content)}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(response.content)
+                            alert('Content copied to clipboard!')
+                          } catch (error) {
+                            console.error('Failed to copy:', error)
+                            alert('Failed to copy content. Please select and copy manually.')
+                          }
+                        }}
                         className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 border border-blue-600 rounded"
                       >
                         Copy Content
                       </button>
-                      {response.status === 'processed' && (
-                        <>
-                          <button 
-                            onClick={() => createBlogFromResponse(response.id)}
-                            disabled={creatingBlog === response.id}
-                            className="text-green-600 hover:text-green-800 text-sm px-2 py-1 border border-green-600 rounded disabled:opacity-50"
-                          >
-                            {creatingBlog === response.id ? 'Creating...' : '📝 Create Blog'}
-                          </button>
-                          <button 
-                            onClick={() => createThreadFromResponse(response.id)}
-                            disabled={creatingThread === response.id}
-                            className="text-purple-600 hover:text-purple-800 text-sm px-2 py-1 border border-purple-600 rounded disabled:opacity-50"
-                          >
-                            {creatingThread === response.id ? 'Creating...' : '🧵 Create Thread'}
-                          </button>
-                        </>
-                      )}
+                      <>
+                        <button 
+                          onClick={() => createBlogFromResponse(response.id)}
+                          disabled={creatingBlog === response.id}
+                          className="text-green-600 hover:text-green-800 text-sm px-2 py-1 border border-green-600 rounded disabled:opacity-50"
+                        >
+                          {creatingBlog === response.id ? 'Creating...' : '📝 Create Blog'}
+                        </button>
+                        <button 
+                          onClick={() => createThreadFromResponse(response.id)}
+                          disabled={creatingThread === response.id}
+                          className="text-purple-600 hover:text-purple-800 text-sm px-2 py-1 border border-purple-600 rounded disabled:opacity-50"
+                        >
+                          {creatingThread === response.id ? 'Creating...' : '🧵 Create Thread'}
+                        </button>
+                      </>
                     </div>
                   </div>
                   <div className="bg-gray-50 p-3 rounded text-sm">
