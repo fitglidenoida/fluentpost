@@ -27,12 +27,43 @@ export default function AdminPage() {
     topic: '',
     platform: 'twitter',
     tone: 'enthusiastic',
-    length: 'medium'
+    length: 'medium',
+    additionalContext: '',
+    keywords: ''
   })
 
   useEffect(() => {
     // Load existing responses from database
     loadResponses()
+
+    // Check for URL parameters to pre-fill topic context
+    const urlParams = new URLSearchParams(window.location.search)
+    const action = urlParams.get('action')
+    const topic = urlParams.get('topic')
+    const context = urlParams.get('context')
+
+    if (action && topic) {
+      setGenerationParams(prev => ({
+        ...prev,
+        type: action === 'research' ? 'blog' : action === 'create' ? 'blog' : 'topic',
+        topic: decodeURIComponent(topic)
+      }))
+
+      // Parse context if available
+      if (context) {
+        try {
+          const topicData = JSON.parse(decodeURIComponent(context))
+          setGenerationParams(prev => ({
+            ...prev,
+            topic: topicData.topic || topic,
+            additionalContext: topicData.description || '',
+            keywords: topicData.keywords || ''
+          }))
+        } catch (error) {
+          console.error('Error parsing topic context:', error)
+        }
+      }
+    }
   }, [])
 
   const loadResponses = async () => {
@@ -54,6 +85,8 @@ export default function AdminPage() {
       platform: generationParams.platform,
       tone: generationParams.tone,
       length: generationParams.length,
+      additionalContext: generationParams.additionalContext,
+      keywords: generationParams.keywords,
     }
 
     const id = CostFreeAIService.queuePrompt(prompt)
@@ -220,6 +253,30 @@ export default function AdminPage() {
                 <option value="medium">Medium</option>
                 <option value="long">Long</option>
               </select>
+            </div>
+          </div>
+
+          {/* Additional Context Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Topic Context/Description</label>
+              <textarea 
+                value={generationParams.additionalContext}
+                onChange={(e) => setGenerationParams({...generationParams, additionalContext: e.target.value})}
+                placeholder="Describe the topic in detail, what it's about, target audience, etc."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
+              <input 
+                type="text"
+                value={generationParams.keywords}
+                onChange={(e) => setGenerationParams({...generationParams, keywords: e.target.value})}
+                placeholder="e.g., fitness, workout, health, wellness"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
           </div>
 

@@ -63,14 +63,26 @@ export default function ResearchHub() {
 
   const handleResearchTopic = async (topic: any) => {
     console.log('Researching topic:', topic.title)
-    // This will open the AI Admin Panel with research instructions
-    window.open('/admin?action=research&topic=' + encodeURIComponent(topic.title), '_blank')
+    // This will open the AI Admin Panel with research instructions and topic context
+    const topicData = {
+      topic: topic.title,
+      description: topic.description,
+      keywords: topic.keywords,
+      category: topic.category
+    }
+    window.open('/admin?action=research&topic=' + encodeURIComponent(topic.title) + '&context=' + encodeURIComponent(JSON.stringify(topicData)), '_blank')
   }
 
   const handleCreateContent = async (topic: any) => {
     console.log('Creating content for topic:', topic.title)
-    // This will open the AI Admin Panel with content creation instructions
-    window.open('/admin?action=create&topic=' + encodeURIComponent(topic.title), '_blank')
+    // This will open the AI Admin Panel with content creation instructions and topic context
+    const topicData = {
+      topic: topic.title,
+      description: topic.description,
+      keywords: topic.keywords,
+      category: topic.category
+    }
+    window.open('/admin?action=create&topic=' + encodeURIComponent(topic.title) + '&context=' + encodeURIComponent(JSON.stringify(topicData)), '_blank')
   }
 
   const filteredTopics = (topics || []).filter((topic: any) => {

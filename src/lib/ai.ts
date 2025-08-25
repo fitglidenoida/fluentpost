@@ -8,6 +8,7 @@ export interface AIPrompt {
   tone?: string
   length?: string
   additionalContext?: string
+  keywords?: string
   id?: string
 }
 
@@ -27,20 +28,24 @@ export class CostFreeAIService {
     const basePrompts = {
       blog: `Create a viral blog post about "${prompt.topic}" for FitGlide fitness app. 
       
+Topic Context: ${prompt.additionalContext || 'General fitness and wellness content'}
+Keywords: ${prompt.keywords || 'fitness, health, wellness'}
+
 Requirements:
-- Title that grabs attention
-- Engaging introduction
-- Actionable content with tips/exercises
+- Title that grabs attention and is specific to the topic
+- Engaging introduction that addresses the specific topic
+- Actionable content with tips/exercises relevant to the topic
 - SEO-optimized with meta description and keywords
 - Tone: ${prompt.tone || 'professional yet friendly'}
 - Length: ${prompt.length || 'medium'} (800-1200 words)
-- Include fitness tips, workout routines, or health advice
+- Include specific tips, routines, or advice related to the topic
 - End with a call-to-action to download FitGlide app
+- Make sure the content is specifically about the topic, not generic fitness
 
 Format the response as JSON with these fields:
 {
-  "title": "SEO-optimized title",
-  "content": "Full blog content with markdown formatting",
+  "title": "SEO-optimized title specific to the topic",
+  "content": "Full blog content with markdown formatting focused on the topic",
   "excerpt": "Brief summary (150 characters max)",
   "seoTitle": "SEO title for search engines",
   "seoDescription": "Meta description (160 characters max)",
