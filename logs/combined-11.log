@@ -1,0 +1,216 @@
+2025-08-25T11:16:35:    ▲ Next.js 15.5.0
+2025-08-25T11:16:35:    - Local:        http://localhost:3002
+2025-08-25T11:16:35:    - Network:      http://62.72.56.11:3002
+2025-08-25T11:16:35: 
+2025-08-25T11:16:35:  ✓ Starting...
+2025-08-25T11:16:35:  ✓ Ready in 541ms
+2025-08-25T12:06:57:    ▲ Next.js 15.5.0
+2025-08-25T12:06:57:    - Local:        http://localhost:3002
+2025-08-25T12:06:57:    - Network:      http://62.72.56.11:3002
+2025-08-25T12:06:57: 
+2025-08-25T12:06:57:  ✓ Starting...
+2025-08-25T12:06:57:  ✓ Ready in 491ms
+2025-08-25T12:33:56:    ▲ Next.js 15.5.0
+2025-08-25T12:33:56:    - Local:        http://localhost:3002
+2025-08-25T12:33:56:    - Network:      http://62.72.56.11:3002
+2025-08-25T12:33:56: 
+2025-08-25T12:33:56:  ✓ Starting...
+2025-08-25T12:33:56:  ✓ Ready in 484ms
+2025-08-25T14:47:23:    ▲ Next.js 15.5.0
+2025-08-25T14:47:23:    - Local:        http://localhost:3002
+2025-08-25T14:47:23:    - Network:      http://62.72.56.11:3002
+2025-08-25T14:47:23: 
+2025-08-25T14:47:23:  ✓ Starting...
+2025-08-25T14:47:23:  ✓ Ready in 606ms
+2025-08-25T14:50:43:    ▲ Next.js 15.5.0
+2025-08-25T14:50:43:    - Local:        http://localhost:3002
+2025-08-25T14:50:43:    - Network:      http://62.72.56.11:3002
+2025-08-25T14:50:43: 
+2025-08-25T14:50:43:  ✓ Starting...
+2025-08-25T14:50:44:  ✓ Ready in 484ms
+2025-08-25T15:17:17:    ▲ Next.js 15.5.0
+2025-08-25T15:17:17:    - Local:        http://localhost:3002
+2025-08-25T15:17:17:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:17:17: 
+2025-08-25T15:17:17:  ✓ Starting...
+2025-08-25T15:17:17:  ✓ Ready in 447ms
+2025-08-25T15:25:05:    ▲ Next.js 15.5.0
+2025-08-25T15:25:05:    - Local:        http://localhost:3002
+2025-08-25T15:25:05:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:25:05: 
+2025-08-25T15:25:05:  ✓ Starting...
+2025-08-25T15:25:05:  ✓ Ready in 539ms
+2025-08-25T15:26:18: 🔒 Security Check: {
+2025-08-25T15:26:18:   currentUser: 'info@fitglide.in',
+2025-08-25T15:26:18:   currentUserRole: 'admin',
+2025-08-25T15:26:18:   currentUserId: 'cmer219ke0000jqqpvvzkaoob',
+2025-08-25T15:26:18:   targetUserId: 'cmer3kgn70000jqm96t408x7s',
+2025-08-25T15:26:18:   requestedChanges: { name: 'Super Admin', email: 'admin@fluentpost.in', role: 'user' }
+2025-08-25T15:26:18: }
+2025-08-25T15:26:18: ❌ Access denied: Attempting to modify super admin role
+2025-08-25T15:28:20: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:28:20: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: Foreign key constraint violated on the foreign key
+2025-08-25T15:28:20:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:28:20:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:28:20:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:28:20:   code: 'P2003',
+2025-08-25T15:28:20:   meta: [Object],
+2025-08-25T15:28:20:   clientVersion: '6.14.0'
+2025-08-25T15:28:20: }
+2025-08-25T15:53:36:    ▲ Next.js 15.5.0
+2025-08-25T15:53:36:    - Local:        http://localhost:3002
+2025-08-25T15:53:36:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:53:36: 
+2025-08-25T15:53:36:  ✓ Starting...
+2025-08-25T15:53:36:  ✓ Ready in 460ms
+2025-08-25T15:54:22: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:54:22: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: Foreign key constraint violated on the foreign key
+2025-08-25T15:54:22:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:54:22:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:54:22:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:54:22:   code: 'P2003',
+2025-08-25T15:54:22:   meta: [Object],
+2025-08-25T15:54:22:   clientVersion: '6.14.0'
+2025-08-25T15:54:22: }
+2025-08-25T16:24:54:    ▲ Next.js 15.5.0
+2025-08-25T16:24:54:    - Local:        http://localhost:3002
+2025-08-25T16:24:54:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:24:54: 
+2025-08-25T16:24:54:  ✓ Starting...
+2025-08-25T16:24:54:  ✓ Ready in 458ms
+2025-08-25T16:40:19:    ▲ Next.js 15.5.0
+2025-08-25T16:40:19:    - Local:        http://localhost:3002
+2025-08-25T16:40:19:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:40:19: 
+2025-08-25T16:40:19:  ✓ Starting...
+2025-08-25T16:40:19:  ✓ Ready in 440ms
+2025-08-25T16:59:03:    ▲ Next.js 15.5.0
+2025-08-25T16:59:03:    - Local:        http://localhost:3002
+2025-08-25T16:59:03:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:59:03: 
+2025-08-25T16:59:03:  ✓ Starting...
+2025-08-25T16:59:03:  ✓ Ready in 509ms
+2025-08-25T17:05:42: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:05:42: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:05:42: 
+2025-08-25T17:05:42: 
+2025-08-25T17:05:42: Foreign key constraint violated on the foreign key
+2025-08-25T17:05:42:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:05:42:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:05:42:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:05:42:   code: 'P2003',
+2025-08-25T17:05:42:   meta: [Object],
+2025-08-25T17:05:42:   clientVersion: '6.14.0'
+2025-08-25T17:05:42: }
+2025-08-25T17:06:13: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:06:13: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:06:13: 
+2025-08-25T17:06:13: 
+2025-08-25T17:06:13: Foreign key constraint violated on the foreign key
+2025-08-25T17:06:13:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:06:13:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:06:13:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:06:13:   code: 'P2003',
+2025-08-25T17:06:13:   meta: [Object],
+2025-08-25T17:06:13:   clientVersion: '6.14.0'
+2025-08-25T17:06:13: }
+2025-08-25T17:09:41:    ▲ Next.js 15.5.0
+2025-08-25T17:09:41:    - Local:        http://localhost:3002
+2025-08-25T17:09:41:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:09:41: 
+2025-08-25T17:09:41:  ✓ Starting...
+2025-08-25T17:09:41:  ✓ Ready in 434ms
+2025-08-25T17:12:50: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:12:50: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:12:50: 
+2025-08-25T17:12:50: 
+2025-08-25T17:12:50: Foreign key constraint violated on the foreign key
+2025-08-25T17:12:50:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:12:50:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:12:50:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:12:50:   code: 'P2003',
+2025-08-25T17:12:50:   meta: [Object],
+2025-08-25T17:12:50:   clientVersion: '6.14.0'
+2025-08-25T17:12:50: }
+2025-08-25T17:13:10: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:13:10: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:13:10: 
+2025-08-25T17:13:10: 
+2025-08-25T17:13:10: Foreign key constraint violated on the foreign key
+2025-08-25T17:13:10:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:13:10:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:13:10:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:13:10:   code: 'P2003',
+2025-08-25T17:13:10:   meta: [Object],
+2025-08-25T17:13:10:   clientVersion: '6.14.0'
+2025-08-25T17:13:10: }
+2025-08-25T17:13:34: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:13:34: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:13:34: 
+2025-08-25T17:13:34: 
+2025-08-25T17:13:34: Foreign key constraint violated on the foreign key
+2025-08-25T17:13:34:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:13:34:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:13:34:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:13:34:   code: 'P2003',
+2025-08-25T17:13:34:   meta: [Object],
+2025-08-25T17:13:34:   clientVersion: '6.14.0'
+2025-08-25T17:13:34: }
+2025-08-25T17:21:18:    ▲ Next.js 15.5.0
+2025-08-25T17:21:18:    - Local:        http://localhost:3002
+2025-08-25T17:21:18:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:21:18: 
+2025-08-25T17:21:18:  ✓ Starting...
+2025-08-25T17:21:19:  ✓ Ready in 491ms
+2025-08-25T17:40:16: Testing Twitter connection with credentials: {
+2025-08-25T17:40:16:   apiKey: '***configured***',
+2025-08-25T17:40:16:   apiSecret: '***configured***',
+2025-08-25T17:40:16:   accessToken: '***configured***',
+2025-08-25T17:40:16:   accessTokenSecret: '***configured***'
+2025-08-25T17:40:16: }
+2025-08-25T17:40:16: Step 1: Credentials check passed
+2025-08-25T17:40:16: Step 2: Connection test passed
+2025-08-25T17:40:16: Step 3: Starting database update
+2025-08-25T17:40:16: Step 4: Retrieved current settings
+2025-08-25T17:40:20: Testing Twitter connection with credentials: {
+2025-08-25T17:40:20:   apiKey: '***configured***',
+2025-08-25T17:40:20:   apiSecret: '***configured***',
+2025-08-25T17:40:20:   accessToken: '***configured***',
+2025-08-25T17:40:20:   accessTokenSecret: '***configured***'
+2025-08-25T17:40:20: }
+2025-08-25T17:40:20: Step 1: Credentials check passed
+2025-08-25T17:40:20: Step 2: Connection test passed
+2025-08-25T17:40:20: Step 3: Starting database update
+2025-08-25T17:40:20: Step 4: Retrieved current settings
+2025-08-25T17:50:11:    ▲ Next.js 15.5.0
+2025-08-25T17:50:11:    - Local:        http://localhost:3002
+2025-08-25T17:50:11:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:50:11: 
+2025-08-25T17:50:11:  ✓ Starting...
+2025-08-25T17:50:11:  ✓ Ready in 929ms
+2025-08-25T17:50:55: Testing Twitter connection with real API call...
+2025-08-25T17:50:55: Twitter API test failed: {
+2025-08-25T17:50:55:   title: 'Unsupported Authentication',
+2025-08-25T17:50:55:   detail: 'Authenticating with OAuth 2.0 Application-Only is forbidden for this endpoint.  Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].',
+2025-08-25T17:50:55:   type: 'https://api.twitter.com/2/problems/unsupported-authentication',
+2025-08-25T17:50:55:   status: 403
+2025-08-25T17:50:55: }
+2025-08-25T17:50:57: Testing Twitter connection with real API call...
+2025-08-25T17:50:57: Twitter API test failed: {
+2025-08-25T17:50:57:   title: 'Unsupported Authentication',
+2025-08-25T17:50:57:   detail: 'Authenticating with OAuth 2.0 Application-Only is forbidden for this endpoint.  Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].',
+2025-08-25T17:50:57:   type: 'https://api.twitter.com/2/problems/unsupported-authentication',
+2025-08-25T17:50:57:   status: 403
+2025-08-25T17:50:57: }
+2025-08-25T18:16:06:    ▲ Next.js 15.5.0
+2025-08-25T18:16:06:    - Local:        http://localhost:3002
+2025-08-25T18:16:06:    - Network:      http://62.72.56.11:3002
+2025-08-25T18:16:06: 
+2025-08-25T18:16:06:  ✓ Starting...
+2025-08-25T18:16:06:  ✓ Ready in 445ms

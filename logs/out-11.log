@@ -1,0 +1,120 @@
+2025-08-25T11:16:35:    ▲ Next.js 15.5.0
+2025-08-25T11:16:35:    - Local:        http://localhost:3002
+2025-08-25T11:16:35:    - Network:      http://62.72.56.11:3002
+2025-08-25T11:16:35: 
+2025-08-25T11:16:35:  ✓ Starting...
+2025-08-25T11:16:35:  ✓ Ready in 541ms
+2025-08-25T12:06:57:    ▲ Next.js 15.5.0
+2025-08-25T12:06:57:    - Local:        http://localhost:3002
+2025-08-25T12:06:57:    - Network:      http://62.72.56.11:3002
+2025-08-25T12:06:57: 
+2025-08-25T12:06:57:  ✓ Starting...
+2025-08-25T12:06:57:  ✓ Ready in 491ms
+2025-08-25T12:33:56:    ▲ Next.js 15.5.0
+2025-08-25T12:33:56:    - Local:        http://localhost:3002
+2025-08-25T12:33:56:    - Network:      http://62.72.56.11:3002
+2025-08-25T12:33:56: 
+2025-08-25T12:33:56:  ✓ Starting...
+2025-08-25T12:33:56:  ✓ Ready in 484ms
+2025-08-25T14:47:23:    ▲ Next.js 15.5.0
+2025-08-25T14:47:23:    - Local:        http://localhost:3002
+2025-08-25T14:47:23:    - Network:      http://62.72.56.11:3002
+2025-08-25T14:47:23: 
+2025-08-25T14:47:23:  ✓ Starting...
+2025-08-25T14:47:23:  ✓ Ready in 606ms
+2025-08-25T14:50:43:    ▲ Next.js 15.5.0
+2025-08-25T14:50:43:    - Local:        http://localhost:3002
+2025-08-25T14:50:43:    - Network:      http://62.72.56.11:3002
+2025-08-25T14:50:43: 
+2025-08-25T14:50:43:  ✓ Starting...
+2025-08-25T14:50:44:  ✓ Ready in 484ms
+2025-08-25T15:17:17:    ▲ Next.js 15.5.0
+2025-08-25T15:17:17:    - Local:        http://localhost:3002
+2025-08-25T15:17:17:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:17:17: 
+2025-08-25T15:17:17:  ✓ Starting...
+2025-08-25T15:17:17:  ✓ Ready in 447ms
+2025-08-25T15:25:05:    ▲ Next.js 15.5.0
+2025-08-25T15:25:05:    - Local:        http://localhost:3002
+2025-08-25T15:25:05:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:25:05: 
+2025-08-25T15:25:05:  ✓ Starting...
+2025-08-25T15:25:05:  ✓ Ready in 539ms
+2025-08-25T15:26:18: 🔒 Security Check: {
+2025-08-25T15:26:18:   currentUser: 'info@fitglide.in',
+2025-08-25T15:26:18:   currentUserRole: 'admin',
+2025-08-25T15:26:18:   currentUserId: 'cmer219ke0000jqqpvvzkaoob',
+2025-08-25T15:26:18:   targetUserId: 'cmer3kgn70000jqm96t408x7s',
+2025-08-25T15:26:18:   requestedChanges: { name: 'Super Admin', email: 'admin@fluentpost.in', role: 'user' }
+2025-08-25T15:26:18: }
+2025-08-25T15:26:18: ❌ Access denied: Attempting to modify super admin role
+2025-08-25T15:53:36:    ▲ Next.js 15.5.0
+2025-08-25T15:53:36:    - Local:        http://localhost:3002
+2025-08-25T15:53:36:    - Network:      http://62.72.56.11:3002
+2025-08-25T15:53:36: 
+2025-08-25T15:53:36:  ✓ Starting...
+2025-08-25T15:53:36:  ✓ Ready in 460ms
+2025-08-25T16:24:54:    ▲ Next.js 15.5.0
+2025-08-25T16:24:54:    - Local:        http://localhost:3002
+2025-08-25T16:24:54:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:24:54: 
+2025-08-25T16:24:54:  ✓ Starting...
+2025-08-25T16:24:54:  ✓ Ready in 458ms
+2025-08-25T16:40:19:    ▲ Next.js 15.5.0
+2025-08-25T16:40:19:    - Local:        http://localhost:3002
+2025-08-25T16:40:19:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:40:19: 
+2025-08-25T16:40:19:  ✓ Starting...
+2025-08-25T16:40:19:  ✓ Ready in 440ms
+2025-08-25T16:59:03:    ▲ Next.js 15.5.0
+2025-08-25T16:59:03:    - Local:        http://localhost:3002
+2025-08-25T16:59:03:    - Network:      http://62.72.56.11:3002
+2025-08-25T16:59:03: 
+2025-08-25T16:59:03:  ✓ Starting...
+2025-08-25T16:59:03:  ✓ Ready in 509ms
+2025-08-25T17:09:41:    ▲ Next.js 15.5.0
+2025-08-25T17:09:41:    - Local:        http://localhost:3002
+2025-08-25T17:09:41:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:09:41: 
+2025-08-25T17:09:41:  ✓ Starting...
+2025-08-25T17:09:41:  ✓ Ready in 434ms
+2025-08-25T17:21:18:    ▲ Next.js 15.5.0
+2025-08-25T17:21:18:    - Local:        http://localhost:3002
+2025-08-25T17:21:18:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:21:18: 
+2025-08-25T17:21:18:  ✓ Starting...
+2025-08-25T17:21:19:  ✓ Ready in 491ms
+2025-08-25T17:40:16: Testing Twitter connection with credentials: {
+2025-08-25T17:40:16:   apiKey: '***configured***',
+2025-08-25T17:40:16:   apiSecret: '***configured***',
+2025-08-25T17:40:16:   accessToken: '***configured***',
+2025-08-25T17:40:16:   accessTokenSecret: '***configured***'
+2025-08-25T17:40:16: }
+2025-08-25T17:40:16: Step 1: Credentials check passed
+2025-08-25T17:40:16: Step 2: Connection test passed
+2025-08-25T17:40:16: Step 3: Starting database update
+2025-08-25T17:40:16: Step 4: Retrieved current settings
+2025-08-25T17:40:20: Testing Twitter connection with credentials: {
+2025-08-25T17:40:20:   apiKey: '***configured***',
+2025-08-25T17:40:20:   apiSecret: '***configured***',
+2025-08-25T17:40:20:   accessToken: '***configured***',
+2025-08-25T17:40:20:   accessTokenSecret: '***configured***'
+2025-08-25T17:40:20: }
+2025-08-25T17:40:20: Step 1: Credentials check passed
+2025-08-25T17:40:20: Step 2: Connection test passed
+2025-08-25T17:40:20: Step 3: Starting database update
+2025-08-25T17:40:20: Step 4: Retrieved current settings
+2025-08-25T17:50:11:    ▲ Next.js 15.5.0
+2025-08-25T17:50:11:    - Local:        http://localhost:3002
+2025-08-25T17:50:11:    - Network:      http://62.72.56.11:3002
+2025-08-25T17:50:11: 
+2025-08-25T17:50:11:  ✓ Starting...
+2025-08-25T17:50:11:  ✓ Ready in 929ms
+2025-08-25T17:50:55: Testing Twitter connection with real API call...
+2025-08-25T17:50:57: Testing Twitter connection with real API call...
+2025-08-25T18:16:06:    ▲ Next.js 15.5.0
+2025-08-25T18:16:06:    - Local:        http://localhost:3002
+2025-08-25T18:16:06:    - Network:      http://62.72.56.11:3002
+2025-08-25T18:16:06: 
+2025-08-25T18:16:06:  ✓ Starting...
+2025-08-25T18:16:06:  ✓ Ready in 445ms

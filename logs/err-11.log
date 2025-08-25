@@ -1,0 +1,96 @@
+2025-08-25T15:28:20: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:28:20: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: Foreign key constraint violated on the foreign key
+2025-08-25T15:28:20:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:28:20:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:28:20:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:28:20:   code: 'P2003',
+2025-08-25T15:28:20:   meta: [Object],
+2025-08-25T15:28:20:   clientVersion: '6.14.0'
+2025-08-25T15:28:20: }
+2025-08-25T15:54:22: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:54:22: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: Foreign key constraint violated on the foreign key
+2025-08-25T15:54:22:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:54:22:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:54:22:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:54:22:   code: 'P2003',
+2025-08-25T15:54:22:   meta: [Object],
+2025-08-25T15:54:22:   clientVersion: '6.14.0'
+2025-08-25T15:54:22: }
+2025-08-25T17:05:42: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:05:42: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:05:42: 
+2025-08-25T17:05:42: 
+2025-08-25T17:05:42: Foreign key constraint violated on the foreign key
+2025-08-25T17:05:42:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:05:42:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:05:42:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:05:42:   code: 'P2003',
+2025-08-25T17:05:42:   meta: [Object],
+2025-08-25T17:05:42:   clientVersion: '6.14.0'
+2025-08-25T17:05:42: }
+2025-08-25T17:06:13: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:06:13: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:06:13: 
+2025-08-25T17:06:13: 
+2025-08-25T17:06:13: Foreign key constraint violated on the foreign key
+2025-08-25T17:06:13:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:06:13:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:06:13:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:06:13:   code: 'P2003',
+2025-08-25T17:06:13:   meta: [Object],
+2025-08-25T17:06:13:   clientVersion: '6.14.0'
+2025-08-25T17:06:13: }
+2025-08-25T17:12:50: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:12:50: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:12:50: 
+2025-08-25T17:12:50: 
+2025-08-25T17:12:50: Foreign key constraint violated on the foreign key
+2025-08-25T17:12:50:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:12:50:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:12:50:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:12:50:   code: 'P2003',
+2025-08-25T17:12:50:   meta: [Object],
+2025-08-25T17:12:50:   clientVersion: '6.14.0'
+2025-08-25T17:12:50: }
+2025-08-25T17:13:10: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:13:10: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:13:10: 
+2025-08-25T17:13:10: 
+2025-08-25T17:13:10: Foreign key constraint violated on the foreign key
+2025-08-25T17:13:10:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:13:10:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:13:10:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:13:10:   code: 'P2003',
+2025-08-25T17:13:10:   meta: [Object],
+2025-08-25T17:13:10:   clientVersion: '6.14.0'
+2025-08-25T17:13:10: }
+2025-08-25T17:13:34: Error creating AI response: Error [PrismaClientKnownRequestError]: 
+2025-08-25T17:13:34: Invalid `prisma.aIResponse.create()` invocation:
+2025-08-25T17:13:34: 
+2025-08-25T17:13:34: 
+2025-08-25T17:13:34: Foreign key constraint violated on the foreign key
+2025-08-25T17:13:34:     at async B (.next/server/app/api/ai-responses/route.js:1:2018)
+2025-08-25T17:13:34:     at async k (.next/server/app/api/ai-responses/route.js:1:5281)
+2025-08-25T17:13:34:     at async g (.next/server/app/api/ai-responses/route.js:1:6284) {
+2025-08-25T17:13:34:   code: 'P2003',
+2025-08-25T17:13:34:   meta: [Object],
+2025-08-25T17:13:34:   clientVersion: '6.14.0'
+2025-08-25T17:13:34: }
+2025-08-25T17:50:55: Twitter API test failed: {
+2025-08-25T17:50:55:   title: 'Unsupported Authentication',
+2025-08-25T17:50:55:   detail: 'Authenticating with OAuth 2.0 Application-Only is forbidden for this endpoint.  Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].',
+2025-08-25T17:50:55:   type: 'https://api.twitter.com/2/problems/unsupported-authentication',
+2025-08-25T17:50:55:   status: 403
+2025-08-25T17:50:55: }
+2025-08-25T17:50:57: Twitter API test failed: {
+2025-08-25T17:50:57:   title: 'Unsupported Authentication',
+2025-08-25T17:50:57:   detail: 'Authenticating with OAuth 2.0 Application-Only is forbidden for this endpoint.  Supported authentication types are [OAuth 1.0a User Context, OAuth 2.0 User Context].',
+2025-08-25T17:50:57:   type: 'https://api.twitter.com/2/problems/unsupported-authentication',
+2025-08-25T17:50:57:   status: 403
+2025-08-25T17:50:57: }
