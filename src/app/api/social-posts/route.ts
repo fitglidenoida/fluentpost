@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       platform: validatedData.platform,
       status: validatedData.status,
       scheduledAt: validatedData.scheduledAt ? new Date(validatedData.scheduledAt) : null,
-      userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+              userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
     }
     
     if (validatedData.blogPostId) {

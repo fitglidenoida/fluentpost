@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         value: body.value,
         date: body.date ? new Date(body.date) : new Date(),
         source: body.source || 'manual',
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
         blogPostId: body.blogPostId,
         socialPostId: body.socialPostId,
         campaignId: body.campaignId,

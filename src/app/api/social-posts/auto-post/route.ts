@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
           content: postContent,
           platform: platforms.join(','),
           status: 'scheduled',
-          userId: 'cmepgmh280000v37z3o18yro8',
+          userId: 'cmerb0ul10000v37n3jqqjoq4',
           blogPostId: blogPost.id,
         },
       })

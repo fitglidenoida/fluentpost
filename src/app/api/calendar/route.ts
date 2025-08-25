@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     const scheduledDate = new Date(`${date}T${time}`)
     
     // Default user ID (you might want to get this from authentication)
-    const userId = 'cmepgmh280000v37z3o18yro8'
+    const userId = 'cmerb0ul10000v37n3jqqjoq4'
 
     let result
 
