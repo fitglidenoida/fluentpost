@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const campaign = await prisma.campaign.create({
       data: {
         ...validatedData,
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
         startDate: new Date(validatedData.startDate),
         endDate: new Date(validatedData.endDate),
       },

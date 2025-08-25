@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...validatedData,
         slug,
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
         viralScore: 0, // Will be calculated based on engagement
         views: 0,
         shares: 0,

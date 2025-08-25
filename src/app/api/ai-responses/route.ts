@@ -25,7 +25,7 @@ export async function GET() {
   try {
     const aiResponses = await prisma.aIResponse.findMany({
       where: {
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       data: {
         ...validatedData,
         content: cleanedContent || '',
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
       },
     })
 
@@ -96,7 +96,7 @@ export async function storeGPTResponse(promptId: string, gptResponse: string, pr
         response: gptResponse,
         content: cleanedContent,
         status: 'processed',
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
       },
     })
 

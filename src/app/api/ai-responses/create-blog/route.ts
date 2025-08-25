@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         seoDescription: responseData.seoDescription || '',
         metaKeywords: responseData.metaKeywords || '',
         status: 'draft',
-        userId: 'cmepgmh280000v37z3o18yro8', // Default user ID
+        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
         topicId: topicId || null,
         viralScore: 0,
         views: 0,
