@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 
 interface User {
   id: string
@@ -13,10 +14,12 @@ interface User {
 }
 
 export default function EditUser({ params }: { params: Promise<{ id: string }> }) {
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,9 +27,25 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
   })
 
   useEffect(() => {
+    // Check authentication and role
+    if (status === 'loading') return
+    
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+      return
+    }
+
     const fetchUser = async () => {
       try {
         const { id } = await params
+        
+        // Check if user is trying to edit another user's data
+        if (session?.user?.role !== 'admin' && session?.user?.id !== id) {
+          setError('Access denied. You can only edit your own data.')
+          setIsLoading(false)
+          return
+        }
+
         const response = await fetch(`/api/users/${id}`)
         if (response.ok) {
           const userData = await response.json()
@@ -36,18 +55,21 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
             email: userData.email,
             role: userData.role
           })
+        } else if (response.status === 403) {
+          setError('Access denied. You do not have permission to edit this user.')
         } else {
-          console.error('Failed to fetch user')
+          setError('Failed to fetch user')
         }
       } catch (error) {
         console.error('Error fetching user:', error)
+        setError('Error fetching user')
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchUser()
-  }, [params])
+  }, [params, session, status, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,7 +86,8 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
       if (response.ok) {
         router.push(`/users/${id}`)
       } else {
-        alert('Error updating user')
+        const errorData = await response.json()
+        alert(errorData.error || 'Error updating user')
       }
     } catch (error) {
       console.error('Error updating user:', error)
@@ -74,10 +97,27 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => router.push('/')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Dashboard
+          </button>
+        </div>
       </div>
     )
   }
@@ -154,12 +194,21 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
               </svg>
               Campaigns
             </a>
-            <div className="w-full flex items-center px-4 py-3 rounded-lg text-left bg-blue-600 text-white">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-              Users
-            </div>
+            {session?.user?.role === 'admin' ? (
+              <div className="w-full flex items-center px-4 py-3 rounded-lg text-left bg-blue-600 text-white">
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                Users
+              </div>
+            ) : (
+              <div className="w-full flex items-center px-4 py-3 rounded-lg text-left bg-blue-600 text-white">
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                My Profile
+              </div>
+            )}
             <a href="/calendar" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -180,11 +229,13 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">S</span>
+              <span className="text-white text-sm font-medium">
+                {session?.user?.name?.charAt(0) || 'U'}
+              </span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">Sarah Johnson</p>
-              <p className="text-xs text-gray-500">Marketing Manager</p>
+              <p className="text-sm font-medium text-gray-900">{session?.user?.name || 'User'}</p>
+              <p className="text-xs text-gray-500">{session?.user?.role || 'User'}</p>
             </div>
           </div>
         </div>
@@ -252,17 +303,19 @@ export default function EditUser({ params }: { params: Promise<{ id: string }> }
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                <select 
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
+              {session?.user?.role === 'admin' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                  <select 
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              )}
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">User Information</h3>

@@ -159,8 +159,18 @@ export async function PUT(
     const body = await request.json()
     const validatedData = userUpdateSchema.parse(body)
 
+    // Add security logging
+    console.log('🔒 Security Check:', {
+      currentUser: session.user.email,
+      currentUserRole: session.user.role,
+      currentUserId: session.user.id,
+      targetUserId: id,
+      requestedChanges: validatedData
+    })
+
     // Check if user is trying to modify another user's data
     if (session.user.role !== 'admin' && session.user.id !== id) {
+      console.log('❌ Access denied: User trying to modify another user')
       return NextResponse.json(
         { error: 'Access denied. You can only modify your own data.' },
         { status: 403 }
@@ -169,6 +179,7 @@ export async function PUT(
 
     // Prevent non-admin users from changing roles
     if (session.user.role !== 'admin' && validatedData.role !== undefined) {
+      console.log('❌ Access denied: Non-admin trying to change role')
       return NextResponse.json(
         { error: 'Access denied. Only admins can change user roles.' },
         { status: 403 }
@@ -177,8 +188,43 @@ export async function PUT(
 
     // Prevent users from changing their own role to admin
     if (session.user.role !== 'admin' && validatedData.role === 'admin') {
+      console.log('❌ Access denied: User trying to promote themselves to admin')
       return NextResponse.json(
         { error: 'Access denied. You cannot promote yourself to admin.' },
+        { status: 403 }
+      )
+    }
+
+    // ADDITIONAL SECURITY: Prevent changing super admin role
+    // First, get the target user to check their email
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true, role: true }
+    })
+
+    // Prevent any role changes to super admin account
+    if (targetUser && targetUser.email === 'admin@fluentpost.in' && validatedData.role !== undefined) {
+      console.log('❌ Access denied: Attempting to modify super admin role')
+      return NextResponse.json(
+        { error: 'Access denied. Cannot modify super admin role.' },
+        { status: 403 }
+      )
+    }
+
+    // ADDITIONAL SECURITY: Prevent changing own role if you're admin
+    if (session.user.role === 'admin' && session.user.id === id && validatedData.role === 'user') {
+      console.log('❌ Access denied: Admin trying to demote themselves')
+      return NextResponse.json(
+        { error: 'Access denied. Admins cannot demote themselves.' },
+        { status: 403 }
+      )
+    }
+
+    // ADDITIONAL SECURITY: Prevent any role changes to own account
+    if (session.user.id === id && validatedData.role !== undefined) {
+      console.log('❌ Access denied: User trying to change their own role')
+      return NextResponse.json(
+        { error: 'Access denied. You cannot change your own role.' },
         { status: 403 }
       )
     }
