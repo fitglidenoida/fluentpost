@@ -1,0 +1,24 @@
+2025-08-25T15:28:20: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:28:20: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: 
+2025-08-25T15:28:20: Foreign key constraint violated on the foreign key
+2025-08-25T15:28:20:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:28:20:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:28:20:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:28:20:   code: 'P2003',
+2025-08-25T15:28:20:   meta: [Object],
+2025-08-25T15:28:20:   clientVersion: '6.14.0'
+2025-08-25T15:28:20: }
+2025-08-25T15:54:22: Error creating topic: Error [PrismaClientKnownRequestError]: 
+2025-08-25T15:54:22: Invalid `prisma.topic.create()` invocation:
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: 
+2025-08-25T15:54:22: Foreign key constraint violated on the foreign key
+2025-08-25T15:54:22:     at async A (.next/server/app/api/topics/route.js:1:2101)
+2025-08-25T15:54:22:     at async k (.next/server/app/api/topics/route.js:1:5069)
+2025-08-25T15:54:22:     at async g (.next/server/app/api/topics/route.js:1:6072) {
+2025-08-25T15:54:22:   code: 'P2003',
+2025-08-25T15:54:22:   meta: [Object],
+2025-08-25T15:54:22:   clientVersion: '6.14.0'
+2025-08-25T15:54:22: }
