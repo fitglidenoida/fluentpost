@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { useAppStore } from '@/lib/store'
 
 export default function Settings() {
+  const { data: session } = useSession()
   const { settings, isLoading, error, fetchSettings, saveSettings } = useAppStore()
   
   // Debug: Log settings whenever they change
@@ -321,11 +323,13 @@ export default function Settings() {
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">S</span>
+              <span className="text-white text-sm font-medium">
+                {session?.user?.name?.charAt(0) || 'U'}
+              </span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">Sarah Johnson</p>
-              <p className="text-xs text-gray-500">Marketing Manager</p>
+              <p className="text-sm font-medium text-gray-900">{session?.user?.name || 'User'}</p>
+              <p className="text-xs text-gray-500">{session?.user?.role || 'User'}</p>
             </div>
           </div>
         </div>
