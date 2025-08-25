@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         type: 'thread',
         title: title || aiResponse.prompt,
         userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-        scheduledFor: new Date(),
+        scheduledAt: new Date(),
         status: 'draft'
       }
     })
