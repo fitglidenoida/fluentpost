@@ -152,50 +152,10 @@ export default function Settings() {
   const handleConnectSocialMedia = async (platform: string) => {
     try {
       if (platform === 'twitter') {
-        // For Twitter, check if credentials are configured and test connection
-        const response = await fetch('/api/social-connect/test-twitter', {
-          method: 'POST'
-        })
+        // For Twitter, use OAuth flow
+        const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/twitter/callback')}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=challenge&code_challenge=challenge&code_challenge_method=plain`
         
-        const result = await response.json()
-        
-        if (result.success) {
-          console.log('Twitter connection successful, updating state...')
-          
-          // Update connection status
-          setConnectionStatus(prev => {
-            const newStatus = { ...prev, twitter: true }
-            console.log('New connection status:', newStatus)
-            return newStatus
-          })
-          setStatusMessage({ type: 'success', message: 'Twitter connected successfully!' })
-          
-          // Update local settings
-          setLocalSettings(prev => {
-            const newSettings = {
-              ...prev,
-              socialMedia: {
-                ...prev.socialMedia,
-                twitter: { 
-                  ...prev.socialMedia.twitter,
-                  connected: true 
-                }
-              }
-            }
-            console.log('New local settings:', newSettings)
-            return newSettings
-          })
-          
-          // Update settings in database
-          const updatedSettings = { ...localSettings }
-          updatedSettings.socialMedia.twitter = { connected: true }
-          await saveSettings(updatedSettings)
-          
-          // Refresh settings from server
-          await fetchSettings()
-        } else {
-          setStatusMessage({ type: 'error', message: result.error || 'Failed to connect Twitter' })
-        }
+        window.open(twitterAuthUrl, '_blank')
         return
       }
       
