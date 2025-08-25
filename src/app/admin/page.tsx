@@ -43,9 +43,10 @@ export default function AdminPage() {
     const context = urlParams.get('context')
 
     if (action && topic) {
+      const urlType = urlParams.get('type')
       setGenerationParams(prev => ({
         ...prev,
-        type: action === 'research' ? 'blog' : action === 'create' ? 'blog' : 'topic',
+        type: action === 'research' ? 'blog' : action === 'create' ? (urlType || 'app-feature') : 'topic',
         topic: decodeURIComponent(topic)
       }))
 
@@ -202,6 +203,7 @@ export default function AdminPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="blog">Blog Post</option>
+                <option value="app-feature">App Feature</option>
                 <option value="social">Social Media</option>
                 <option value="topic">Topic Ideas</option>
               </select>

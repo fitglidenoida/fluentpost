@@ -2,7 +2,7 @@
 // This system allows you to copy-paste prompts and responses without API costs
 
 export interface AIPrompt {
-  type: 'blog' | 'social' | 'topic'
+  type: 'blog' | 'social' | 'topic' | 'app-feature'
   topic: string
   platform?: string
   tone?: string
@@ -31,21 +31,56 @@ export class CostFreeAIService {
 Topic Context: ${prompt.additionalContext || 'General fitness and wellness content'}
 Keywords: ${prompt.keywords || 'fitness, health, wellness'}
 
+IMPORTANT: This is about FitGlide app's FEATURES and FUNCTIONALITY, not generic fitness advice.
+
 Requirements:
-- Title that grabs attention and is specific to the topic
-- Engaging introduction that addresses the specific topic
-- Actionable content with tips/exercises relevant to the topic
+- Title that highlights the app's specific feature/functionality
+- Engaging introduction that explains what the app feature does
+- Content that showcases the app's capabilities and benefits
+- Explain how users can use this feature in the FitGlide app
+- Include practical examples of how the feature works
 - SEO-optimized with meta description and keywords
 - Tone: ${prompt.tone || 'professional yet friendly'}
 - Length: ${prompt.length || 'medium'} (800-1200 words)
-- Include specific tips, routines, or advice related to the topic
+- Focus on the APP FEATURE, not generic health/fitness advice
 - End with a call-to-action to download FitGlide app
-- Make sure the content is specifically about the topic, not generic fitness
+- Make it clear this is about the app's functionality
 
 Format the response as JSON with these fields:
 {
-  "title": "SEO-optimized title specific to the topic",
-  "content": "Full blog content with markdown formatting focused on the topic",
+  "title": "SEO-optimized title about the app feature",
+  "content": "Full blog content explaining the app feature and how to use it",
+  "excerpt": "Brief summary (150 characters max)",
+  "seoTitle": "SEO title for search engines",
+  "seoDescription": "Meta description (160 characters max)",
+  "metaKeywords": "comma-separated keywords"
+}`,
+
+      'app-feature': `Create a viral blog post about FitGlide app's "${prompt.topic}" feature. 
+      
+Topic Context: ${prompt.additionalContext || 'App feature description'}
+Keywords: ${prompt.keywords || 'app, feature, functionality'}
+
+FOCUS: This is specifically about the FitGlide app's FEATURE and how users can use it.
+
+Requirements:
+- Title that clearly mentions the app feature
+- Introduction that explains what this feature does in the FitGlide app
+- Content that walks through how to use this feature step-by-step
+- Explain the benefits and advantages of using this feature
+- Include screenshots or UI descriptions if relevant
+- Showcase the app's user interface and user experience
+- SEO-optimized with meta description and keywords
+- Tone: ${prompt.tone || 'professional yet friendly'}
+- Length: ${prompt.length || 'medium'} (800-1200 words)
+- Focus entirely on the APP FEATURE functionality
+- End with a call-to-action to download FitGlide app
+- Make it a feature showcase, not generic advice
+
+Format the response as JSON with these fields:
+{
+  "title": "SEO-optimized title about the FitGlide app feature",
+  "content": "Full blog content showcasing the app feature and how to use it",
   "excerpt": "Brief summary (150 characters max)",
   "seoTitle": "SEO title for search engines",
   "seoDescription": "Meta description (160 characters max)",
