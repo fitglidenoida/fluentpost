@@ -117,9 +117,13 @@ model SocialPost {
   id          String   @id @default(cuid())
   content     String
   platform    String
+  type        String?  @default("post")
+  title       String?
   status      String   @default("draft")
   scheduledAt DateTime?
   publishedAt DateTime?
+  postedAt    DateTime?
+  engagement  String?
   views       Int      @default(0)
   shares      Int      @default(0)
   likes       Int      @default(0)

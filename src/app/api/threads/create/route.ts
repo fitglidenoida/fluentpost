@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
         id: thread.id,
         tweets: threadResult.tweets,
         totalTweets: threadResult.totalTweets,
-        estimatedReadTime: threadResult.estimatedReadTime
+        estimatedReadTime: threadResult.estimatedReadTime,
+        isBlueTickUser: threadResult.isBlueTickUser,
+        postingStrategy: threadResult.postingStrategy
       }
     })
 
