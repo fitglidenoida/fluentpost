@@ -81,15 +81,15 @@ export class SocialMediaPostingService {
         }
       }
 
-      // Twitter API v1.1 implementation (easier with access tokens)
-      const response = await fetch('https://api.twitter.com/1.1/statuses/update.json', {
+      // Twitter API v2 implementation with OAuth 2.0 Bearer token
+      const response = await fetch('https://api.twitter.com/2/tweets', {
         method: 'POST',
         headers: {
-          'Authorization': `OAuth oauth_consumer_key="${process.env.TWITTER_API_KEY}",oauth_token="${credentials.accessToken}",oauth_signature_method="HMAC-SHA1",oauth_timestamp="${Math.floor(Date.now() / 1000)}",oauth_nonce="${Math.random().toString(36).substring(2)}",oauth_version="1.0"`,
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Bearer ${credentials.accessToken}`,
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          status: content.text
+        body: JSON.stringify({
+          text: content.text
         })
       })
 
@@ -106,8 +106,8 @@ export class SocialMediaPostingService {
       return {
         success: true,
         platform: 'twitter',
-        postId: result.id_str,
-        url: `https://twitter.com/user/status/${result.id_str}`
+        postId: result.data.id,
+        url: `https://twitter.com/user/status/${result.data.id}`
       }
 
     } catch (error: any) {
@@ -287,8 +287,21 @@ export class SocialMediaPostingService {
     if (!settings) return null
     
     const userSettings = JSON.parse(settings.value)
+    const twitterSettings = userSettings.socialMedia?.twitter
+    
+    console.log('Twitter settings from database:', {
+      connected: twitterSettings?.connected,
+      hasAccessToken: !!twitterSettings?.accessToken,
+      username: twitterSettings?.username
+    })
+    
+    if (!twitterSettings?.connected || !twitterSettings?.accessToken) {
+      console.log('Twitter not properly connected')
+      return null
+    }
+    
     return {
-      accessToken: userSettings.socialMedia?.twitter?.accessToken || null
+      accessToken: twitterSettings.accessToken
     }
   }
 
