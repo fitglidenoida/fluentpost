@@ -152,9 +152,11 @@ export default function Settings() {
   const handleConnectSocialMedia = async (platform: string) => {
     try {
       if (platform === 'twitter') {
-        // For Twitter, use OAuth flow
-        const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/api/auth/twitter/callback')}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=challenge&code_challenge=challenge&code_challenge_method=plain`
+        // For Twitter, use OAuth flow with dynamic redirect URI
+        const redirectUri = encodeURIComponent(window.location.origin + '/api/auth/twitter/callback')
+        const twitterAuthUrl = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID}&redirect_uri=${redirectUri}&scope=tweet.read%20tweet.write%20users.read%20offline.access&state=challenge&code_challenge=challenge&code_challenge_method=plain`
         
+        console.log('Twitter OAuth URL:', twitterAuthUrl)
         window.open(twitterAuthUrl, '_blank')
         return
       }

@@ -8,12 +8,18 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
+    // Get the base URL dynamically from the request
+    const baseUrl = process.env.NEXTAUTH_URL || 
+                   `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('x-forwarded-host') || request.headers.get('host')}`
+    
+    console.log('Base URL for OAuth callback:', baseUrl)
+
     if (error) {
-      return NextResponse.redirect(new URL('/settings?error=twitter_auth_failed', request.url))
+      return NextResponse.redirect(new URL('/settings?error=twitter_auth_failed', baseUrl))
     }
 
     if (!code) {
-      return NextResponse.redirect(new URL('/settings?error=twitter_no_code', request.url))
+      return NextResponse.redirect(new URL('/settings?error=twitter_no_code', baseUrl))
     }
 
     // Exchange code for access token
@@ -26,7 +32,7 @@ export async function GET(request: NextRequest) {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/twitter/callback`,
+        redirect_uri: `${baseUrl}/api/auth/twitter/callback`,
         code_verifier: state || 'challenge' // In production, use proper PKCE
       })
     })
@@ -35,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokenResponse.ok) {
       console.error('Twitter token exchange failed:', tokenData)
-      return NextResponse.redirect(new URL('/settings?error=twitter_token_failed', request.url))
+      return NextResponse.redirect(new URL('/settings?error=twitter_token_failed', baseUrl))
     }
 
     // Get user info with access token
@@ -49,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     if (!userResponse.ok) {
       console.error('Twitter user info failed:', userData)
-      return NextResponse.redirect(new URL('/settings?error=twitter_user_failed', request.url))
+      return NextResponse.redirect(new URL('/settings?error=twitter_user_failed', baseUrl))
     }
 
     // Store Twitter credentials in database
@@ -92,10 +98,12 @@ export async function GET(request: NextRequest) {
     })
 
     // Redirect back to settings with success
-    return NextResponse.redirect(new URL(`/settings?success=twitter_connected&username=${userData.data.username}`, request.url))
+    return NextResponse.redirect(new URL(`/settings?success=twitter_connected&username=${userData.data.username}`, baseUrl))
 
   } catch (error: any) {
     console.error('Twitter OAuth callback error:', error)
-    return NextResponse.redirect(new URL('/settings?error=twitter_callback_failed', request.url))
+    // Use a fallback URL if we can't determine the base URL
+    const fallbackUrl = process.env.NEXTAUTH_URL || 'https://fluentpost.in'
+    return NextResponse.redirect(new URL('/settings?error=twitter_callback_failed', fallbackUrl))
   }
 }
