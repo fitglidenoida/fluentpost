@@ -26,19 +26,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse the AI response content
-    let content = ''
-    try {
-      const parsedResponse = JSON.parse(aiResponse.response)
-      content = parsedResponse.content || aiResponse.response
-    } catch {
-      // If not JSON, use the raw response
-      content = aiResponse.response
+    // Use the raw AI response content directly
+    const content = aiResponse.response
+
+    // Get Twitter access token for Blue tick detection
+    const settings = await prisma.appSettings.findFirst({
+      where: { key: 'user_settings' }
+    })
+    
+    let accessToken = null
+    if (settings) {
+      const userSettings = JSON.parse(settings.value)
+      accessToken = userSettings.socialMedia?.twitter?.accessToken
     }
 
     // Convert content to thread
     const threadConverter = new ThreadConverter()
-    const threadResult = await threadConverter.convertToThread(content, title)
+    const threadResult = await threadConverter.convertToThread(content, title, accessToken)
 
     // Store the thread in database
     const thread = await prisma.socialPost.create({

@@ -379,17 +379,30 @@ export default function SocialMedia() {
                     {post.type === 'thread' ? (
                       <div className="mb-3">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-purple-600 text-sm font-medium">🧵 Twitter Thread</span>
-                          <span className="text-xs text-gray-500">
-                            {(() => {
-                              try {
-                                const threadData = JSON.parse(post.content)
-                                return `${threadData.tweets?.length || 0} tweets`
-                              } catch {
-                                return 'Thread'
+                          {(() => {
+                            try {
+                              const threadData = JSON.parse(post.content)
+                              if (threadData.postingStrategy === 'single') {
+                                return (
+                                  <>
+                                    <span className="text-blue-600 text-sm font-medium">📝 Long-form Post</span>
+                                    <span className="text-xs text-gray-500">(Blue tick user)</span>
+                                  </>
+                                )
+                              } else {
+                                return (
+                                  <>
+                                    <span className="text-purple-600 text-sm font-medium">🧵 Twitter Thread</span>
+                                    <span className="text-xs text-gray-500">
+                                      {`${threadData.tweets?.length || 0} tweets`}
+                                    </span>
+                                  </>
+                                )
                               }
-                            })()}
-                          </span>
+                            } catch {
+                              return <span className="text-purple-600 text-sm font-medium">🧵 Twitter Thread</span>
+                            }
+                          })()}
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg">
                           <div className="text-sm text-gray-700 max-h-20 overflow-y-auto">
@@ -429,7 +442,14 @@ export default function SocialMedia() {
                     disabled={postingToSocial === post.id}
                     className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {postingToSocial === post.id ? 'Posting...' : post.type === 'thread' ? 'Post Thread' : 'Post Now'}
+                    {postingToSocial === post.id ? 'Posting...' : (() => {
+                      try {
+                        const threadData = JSON.parse(post.content)
+                        return threadData.postingStrategy === 'single' ? 'Post Long-form' : 'Post Thread'
+                      } catch {
+                        return post.type === 'thread' ? 'Post Thread' : 'Post Now'
+                      }
+                    })()}
                   </button>
                 </div>
               </div>

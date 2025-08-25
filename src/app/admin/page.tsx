@@ -174,10 +174,22 @@ export default function AdminPage() {
 
       if (result.ok) {
         const thread = await result.json()
-        alert(`Twitter thread created successfully!\nTweets: ${thread.thread.totalTweets}\nEstimated read time: ${thread.thread.estimatedReadTime} minutes`)
+        const { postingStrategy, totalTweets, estimatedReadTime, isBlueTickUser } = thread.thread
         
-        // Ask if user wants to post the thread now
-        if (confirm('Would you like to post this thread to Twitter now?')) {
+        let message = `Twitter content created successfully!\n`
+        if (postingStrategy === 'single') {
+          message += `📝 Single long-form post (Blue tick user)\n`
+          message += `📖 Estimated read time: ${estimatedReadTime} minutes`
+        } else {
+          message += `🧵 Thread mode (${totalTweets} tweets)\n`
+          message += `📖 Estimated read time: ${estimatedReadTime} minutes`
+        }
+        
+        alert(message)
+        
+        // Ask if user wants to post now
+        const action = postingStrategy === 'single' ? 'post this long-form content' : 'post this thread'
+        if (confirm(`Would you like to ${action} to Twitter now?`)) {
           await postThread(thread.thread.id)
         }
       } else {
