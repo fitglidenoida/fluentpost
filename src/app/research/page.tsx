@@ -82,7 +82,7 @@ export default function ResearchHub() {
       keywords: topic.keywords,
       category: topic.category
     }
-    window.open('/admin?action=create&topic=' + encodeURIComponent(topic.title) + '&context=' + encodeURIComponent(JSON.stringify(topicData)), '_blank')
+    window.open('/admin?action=create&topic=' + encodeURIComponent(topic.title) + '&context=' + encodeURIComponent(JSON.stringify(topicData)) + '&type=app-feature', '_blank')
   }
 
   const filteredTopics = (topics || []).filter((topic: any) => {
