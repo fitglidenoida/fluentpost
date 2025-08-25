@@ -456,7 +456,7 @@ export default function AdminPage() {
                       >
                         Copy Content
                       </button>
-                      {response.promptType === 'blog' && response.status === 'processed' && (
+                      {response.status === 'processed' && (
                         <>
                           <button 
                             onClick={() => createBlogFromResponse(response.id)}

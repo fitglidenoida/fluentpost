@@ -138,6 +138,30 @@ export default function SocialMedia() {
     }
   }
 
+  const handlePostThread = async (threadId: string) => {
+    setPostingToSocial(threadId)
+    try {
+      const result = await fetch('/api/threads/post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId }),
+      })
+
+      if (result.ok) {
+        const data = await result.json()
+        alert(`Thread posted successfully!\nSuccessful tweets: ${data.successfulTweets}/${data.totalTweets}`)
+        await fetchSocialPosts() // Refresh the list
+      } else {
+        const error = await result.json()
+        alert('Error posting thread: ' + error.error)
+      }
+    } catch (error) {
+      alert('Error posting thread: ' + error)
+    } finally {
+      setPostingToSocial(null)
+    }
+  }
+
   const filteredPosts = (socialPosts || []).filter((post: any) => {
     const matchesSearch = post.content.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesPlatform = selectedPlatform === 'all' || post.platform === selectedPlatform
@@ -352,7 +376,38 @@ export default function SocialMedia() {
                         {post.status}
                       </span>
                     </div>
-                    <p className="text-gray-900 text-sm mb-3 line-clamp-3">{post.content}</p>
+                    {post.type === 'thread' ? (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-purple-600 text-sm font-medium">🧵 Twitter Thread</span>
+                          <span className="text-xs text-gray-500">
+                            {(() => {
+                              try {
+                                const threadData = JSON.parse(post.content)
+                                return `${threadData.tweets?.length || 0} tweets`
+                              } catch {
+                                return 'Thread'
+                              }
+                            })()}
+                          </span>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-700 max-h-20 overflow-y-auto">
+                            {(() => {
+                              try {
+                                const threadData = JSON.parse(post.content)
+                                const firstTweet = threadData.tweets?.[0]?.text || post.content
+                                return firstTweet.substring(0, 150) + (firstTweet.length > 150 ? '...' : '')
+                              } catch {
+                                return post.content.substring(0, 150) + (post.content.length > 150 ? '...' : '')
+                              }
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-900 text-sm mb-3 line-clamp-3">{post.content}</p>
+                    )}
                     <div className="text-sm text-gray-500">
                       Views: {post.views} • Shares: {post.shares} • Likes: {post.likes}
                     </div>
@@ -370,11 +425,11 @@ export default function SocialMedia() {
                     Edit
                   </button>
                   <button 
-                    onClick={() => handlePostToSocial(post.id)}
+                    onClick={() => post.type === 'thread' ? handlePostThread(post.id) : handlePostToSocial(post.id)}
                     disabled={postingToSocial === post.id}
                     className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
-                    {postingToSocial === post.id ? 'Posting...' : 'Post Now'}
+                    {postingToSocial === post.id ? 'Posting...' : post.type === 'thread' ? 'Post Thread' : 'Post Now'}
                   </button>
                 </div>
               </div>
