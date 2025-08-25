@@ -26,7 +26,7 @@ declare module 'next-auth/jwt' {
   }
 }
 
-const handler = NextAuth({
+export const authOptions: any = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -40,16 +40,15 @@ const handler = NextAuth({
           return null
         }
 
-        // For development, allow any email/password combination
-        // In production, you would validate against your database
-        if (process.env.MOCK_AI_RESPONSES === 'true') {
-          return {
-            id: 'mock-user-id',
-            email: credentials.email,
-            name: 'Sarah Johnson',
-            role: 'admin',
-          }
-        }
+        // Remove mock authentication - only allow real users
+        // if (process.env.MOCK_AI_RESPONSES === 'true') {
+        //   return {
+        //     id: 'mock-user-id',
+        //     email: credentials.email,
+        //     name: 'Sarah Johnson',
+        //     role: 'admin',
+        //   }
+        // }
 
         // Real authentication
         const user = await prisma.user.findUnique({
@@ -77,16 +76,16 @@ const handler = NextAuth({
     })
   ],
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt' as const
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token && session.user) {
         session.user.id = token.sub!
         session.user.role = token.role as string
@@ -97,6 +96,8 @@ const handler = NextAuth({
   pages: {
     signIn: '/auth/signin',
   },
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

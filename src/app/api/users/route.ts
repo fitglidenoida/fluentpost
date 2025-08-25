@@ -1,14 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../auth/[...nextauth]/route'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions) as any
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    if (session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'all'
 
     // Build where clause for filtering
-    let whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     
     if (search) {
       whereClause.OR = [
@@ -17,10 +36,14 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Note: The User model doesn't have a status field, so we'll use role instead
-    // or you can add a status field to the User model if needed
+    // Filter by role/status
     if (status !== 'all') {
       whereClause.role = status
+    }
+
+    // For non-admin users, only show their own data
+    if (session.user.role !== 'admin') {
+      whereClause.id = session.user.id
     }
 
     const users = await prisma.user.findMany({

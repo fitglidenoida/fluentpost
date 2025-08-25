@@ -218,14 +218,22 @@ export default function AdminDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={user.role}
-                        onChange={(e) => updateUserRole(user.id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded px-2 py-1"
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      {session?.user?.role === 'admin' ? (
+                        <select
+                          value={user.role}
+                          onChange={(e) => updateUserRole(user.id, e.target.value)}
+                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                        >
+                          <option value="user">User</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                        }`}>
+                          {user.role}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(user.createdAt).toLocaleDateString()}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../auth/[...nextauth]/route'
 
 const userUpdateSchema = z.object({
   name: z.string().min(1),
@@ -13,7 +15,24 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions) as any
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
+
+    // Check if user is trying to access another user's data
+    if (session.user.role !== 'admin' && session.user.id !== id) {
+      return NextResponse.json(
+        { error: 'Access denied. You can only view your own data.' },
+        { status: 403 }
+      )
+    }
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -127,9 +146,42 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions) as any
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const { id } = await params
     const body = await request.json()
     const validatedData = userUpdateSchema.parse(body)
+
+    // Check if user is trying to modify another user's data
+    if (session.user.role !== 'admin' && session.user.id !== id) {
+      return NextResponse.json(
+        { error: 'Access denied. You can only modify your own data.' },
+        { status: 403 }
+      )
+    }
+
+    // Prevent non-admin users from changing roles
+    if (session.user.role !== 'admin' && validatedData.role !== undefined) {
+      return NextResponse.json(
+        { error: 'Access denied. Only admins can change user roles.' },
+        { status: 403 }
+      )
+    }
+
+    // Prevent users from changing their own role to admin
+    if (session.user.role !== 'admin' && validatedData.role === 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. You cannot promote yourself to admin.' },
+        { status: 403 }
+      )
+    }
 
     const user = await prisma.user.update({
       where: { id },
@@ -175,7 +227,32 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions) as any
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Only admins can delete users
+    if (session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Only admins can delete users.' },
+        { status: 403 }
+      )
+    }
+
     const { id } = await params
+
+    // Prevent admin from deleting themselves
+    if (session.user.id === id) {
+      return NextResponse.json(
+        { error: 'Access denied. You cannot delete your own account.' },
+        { status: 403 }
+      )
+    }
 
     await prisma.user.delete({
       where: { id },
