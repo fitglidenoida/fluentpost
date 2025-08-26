@@ -5,6 +5,72 @@ import { SEOService } from '@/lib/seoService'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
+// Safe Prisma wrapper
+const safePrisma = {
+  user: {
+    findUnique: async (params: any) => {
+      try {
+        return await prisma.user.findUnique(params)
+      } catch (error) {
+        console.error('Prisma user.findUnique error:', error)
+        return null
+      }
+    }
+  },
+  website: {
+    findFirst: async (params: any) => {
+      try {
+        return await prisma.website.findFirst(params)
+      } catch (error) {
+        console.error('Prisma website.findFirst error:', error)
+        return null
+      }
+    },
+    findMany: async (params: any) => {
+      try {
+        return await prisma.website.findMany(params)
+      } catch (error) {
+        console.error('Prisma website.findMany error:', error)
+        return []
+      }
+    }
+  },
+  seORecommendation: {
+    findMany: async (params: any) => {
+      try {
+        return await prisma.seORecommendation.findMany(params)
+      } catch (error) {
+        console.error('Prisma seORecommendation.findMany error:', error)
+        return []
+      }
+    },
+    create: async (params: any) => {
+      try {
+        return await prisma.seORecommendation.create(params)
+      } catch (error) {
+        console.error('Prisma seORecommendation.create error:', error)
+        throw error
+      }
+    },
+    update: async (params: any) => {
+      try {
+        return await prisma.seORecommendation.update(params)
+      } catch (error) {
+        console.error('Prisma seORecommendation.update error:', error)
+        throw error
+      }
+    },
+    deleteMany: async (params: any) => {
+      try {
+        return await prisma.seORecommendation.deleteMany(params)
+      } catch (error) {
+        console.error('Prisma seORecommendation.deleteMany error:', error)
+        throw error
+      }
+    }
+  }
+}
+
 const generateRecommendationsSchema = z.object({
   websiteId: z.string()
 })
@@ -25,7 +91,7 @@ export async function POST(request: NextRequest) {
     const { websiteId } = generateRecommendationsSchema.parse(body)
 
     // Verify website ownership
-    const website = await prisma.website.findFirst({
+    const website = await safePrisma.website.findFirst({
       where: { 
         id: websiteId,
         userId: session.user.id 
@@ -42,7 +108,7 @@ export async function POST(request: NextRequest) {
     // Save recommendations to database
     const savedRecommendations = await Promise.all(
       recommendations.map(rec => 
-        prisma.seORecommendation.create({
+        safePrisma.seORecommendation.create({
           data: {
             websiteId,
             type: rec.type,
@@ -77,7 +143,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user ID from database using email
-    const user = await prisma.user.findUnique({
+    const user = await safePrisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true }
     })
@@ -96,7 +162,7 @@ export async function GET(request: NextRequest) {
     
     if (websiteId) {
       // If specific website requested, verify ownership
-      const website = await prisma.website.findFirst({
+      const website = await safePrisma.website.findFirst({
         where: { 
           id: websiteId,
           userId: user.id 
@@ -108,7 +174,7 @@ export async function GET(request: NextRequest) {
       where.websiteId = websiteId
     } else {
       // Get all recommendations for user's websites
-      const userWebsites = await prisma.website.findMany({
+      const userWebsites = await safePrisma.website.findMany({
         where: { userId: user.id },
         select: { id: true }
       })
@@ -119,7 +185,7 @@ export async function GET(request: NextRequest) {
     if (priority) where.priority = priority
 
     // Get recommendations (without relying on Prisma relation includes)
-    const recommendations = await prisma.seORecommendation.findMany({
+    const recommendations = await safePrisma.seORecommendation.findMany({
       where,
       orderBy: [
         { priority: 'desc' },
@@ -130,7 +196,7 @@ export async function GET(request: NextRequest) {
     // Attach website info via a separate query
     const websiteIds = Array.from(new Set(recommendations.map((r: any) => r.websiteId)))
     const websites = websiteIds.length
-      ? await prisma.website.findMany({
+      ? await safePrisma.website.findMany({
           where: { id: { in: websiteIds } },
           select: { id: true, name: true, url: true }
         })
@@ -172,7 +238,7 @@ export async function PUT(request: NextRequest) {
     const { recommendationId, status } = updateRecommendationSchema.parse(body)
 
     // Update recommendation status
-    const recommendation = await prisma.seORecommendation.update({
+    const recommendation = await safePrisma.seORecommendation.update({
       where: { id: recommendationId },
       data: { status }
     })
