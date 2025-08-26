@@ -1017,6 +1017,26 @@ export default function ResearchHub() {
                     Test Users
                   </button>
                   <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/auth/emergency-create', { method: 'POST' })
+                        const result = await response.json()
+                        console.log('Emergency create result:', result)
+                        if (result.success) {
+                          alert(`EMERGENCY FIX: ${result.message}\n\nLogin Credentials:\nEmail: ${result.credentials?.email}\nPassword: ${result.credentials?.password}\n\nUse these to sign in!`)
+                        } else {
+                          alert(`Emergency create failed: ${result.error}`)
+                        }
+                      } catch (error) {
+                        console.error('Emergency create error:', error)
+                        alert('Emergency create failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+                  >
+                    🚨 EMERGENCY FIX
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
