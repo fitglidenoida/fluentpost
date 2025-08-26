@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
 const generateRecommendationsSchema = z.object({
@@ -19,11 +17,6 @@ const updateRecommendationSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     console.log('Recommendations API - POST request received')
-    console.log('Prisma import check:', { 
-      prismaExists: !!prisma, 
-      prismaType: typeof prisma,
-      prismaKeys: prisma ? Object.keys(prisma) : 'undefined'
-    })
     
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
@@ -105,11 +98,6 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     console.log('Recommendations API - GET request received')
-    console.log('Prisma import check:', { 
-      prismaExists: !!prisma, 
-      prismaType: typeof prisma,
-      prismaKeys: prisma ? Object.keys(prisma) : 'undefined'
-    })
     
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {

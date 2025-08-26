@@ -969,6 +969,22 @@ export default function ResearchHub() {
                     Test Prisma
                   </button>
                   <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/test-db')
+                        const result = await response.json()
+                        console.log('Test DB result:', result)
+                        alert(`DB Test: ${result.dbWorking ? 'Working' : 'Failed'}\nTables: ${result.results?.tables?.map((t: any) => t.name).join(', ')}\nCheck console for details.`)
+                      } catch (error) {
+                        console.error('Test DB error:', error)
+                        alert('DB test failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Test DB
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
