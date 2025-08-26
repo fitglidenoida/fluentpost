@@ -34,6 +34,8 @@ export default function ResearchHub() {
     keywords: []
   })
   const [isResearching, setIsResearching] = useState(false)
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false)
+  const [selectedKeyword, setSelectedKeyword] = useState<any>(null)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -199,6 +201,11 @@ export default function ResearchHub() {
       ...prev,
       seedKeywords: prev.seedKeywords.map((keyword, i) => i === index ? value : keyword)
     }))
+  }
+
+  const viewSuggestions = (keyword: any) => {
+    setSelectedKeyword(keyword)
+    setShowSuggestionsModal(true)
   }
 
   useEffect(() => {
@@ -564,9 +571,12 @@ export default function ResearchHub() {
                         <div className="flex items-center justify-between text-sm text-gray-600">
                           <span>Volume: {keyword.searchVolume || 'N/A'}</span>
                           {keyword.suggestions && (
-                            <span className="text-blue-600 cursor-pointer hover:underline">
+                            <button 
+                              onClick={() => viewSuggestions(keyword)}
+                              className="text-blue-600 cursor-pointer hover:underline"
+                            >
                               View suggestions
-                            </span>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -707,6 +717,95 @@ export default function ResearchHub() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Keyword Suggestions Modal */}
+        {showSuggestionsModal && selectedKeyword && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Keyword Suggestions</h2>
+                <button 
+                  onClick={() => setShowSuggestionsModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Main Keyword Info */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Main Keyword: {selectedKeyword.keyword}</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Search Volume:</span>
+                      <span className="ml-2 font-medium">{selectedKeyword.searchVolume || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Difficulty:</span>
+                      <span className="ml-2 font-medium">{selectedKeyword.difficulty || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Suggestions */}
+                {selectedKeyword.suggestions && selectedKeyword.suggestions.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Related Keywords</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedKeyword.suggestions.map((suggestion: string, index: number) => (
+                        <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          <span className="text-gray-900">{suggestion}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Related Keywords */}
+                {selectedKeyword.relatedKeywords && selectedKeyword.relatedKeywords.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Long-tail Variations</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedKeyword.relatedKeywords.map((related: string, index: number) => (
+                        <div key={index} className="bg-green-50 rounded-lg p-3 border border-green-200">
+                          <span className="text-green-900">{related}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button 
+                    onClick={() => {
+                      // Add to research list
+                      setKeywordResearch(prev => ({
+                        ...prev,
+                        seedKeywords: [...prev.seedKeywords, selectedKeyword.keyword]
+                      }))
+                      setShowSuggestionsModal(false)
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add to Research
+                  </button>
+                  <button 
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText(selectedKeyword.keyword)
+                      alert('Keyword copied to clipboard!')
+                    }}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Copy Keyword
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
