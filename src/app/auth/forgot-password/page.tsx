@@ -18,20 +18,24 @@ export default function ForgotPassword() {
     try {
       if (!showPasswordForm) {
         // First step: Check if user exists
-        const response = await fetch('/api/auth/reset-password', {
+        console.log('Checking if user exists for email:', email)
+        
+        const response = await fetch('/api/auth/check-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email, 
-            newPassword: 'temp' // We'll update this in the next step
-          })
+          body: JSON.stringify({ email })
         })
 
+        console.log('Check user response status:', response.status)
+        
         if (response.ok) {
+          const result = await response.json()
+          console.log('User check successful:', result)
           setShowPasswordForm(true)
           setMessage('User found! Please enter your new password.')
         } else {
           const error = await response.json()
+          console.log('User check failed:', error)
           setMessage(error.error || 'User not found')
         }
       } else {
@@ -104,8 +108,18 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            {showPasswordForm && (
+            {showPasswordForm ? (
               <div>
+                <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    ✓ User verified. Please enter your new password below.
+                  </p>
+                </div>
+                <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-800">
+                    Debug: Password form is visible (showPasswordForm = true)
+                  </p>
+                </div>
                 <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
                   New Password
                 </label>
@@ -121,7 +135,16 @@ export default function ForgotPassword() {
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Enter your new password (min 6 characters)"
                   />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Password must be at least 6 characters long
+                  </p>
                 </div>
+              </div>
+            ) : (
+              <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">
+                  Debug: Password form is NOT visible (showPasswordForm = false)
+                </p>
               </div>
             )}
 
