@@ -10,6 +10,11 @@ const nextConfig = {
     // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
+  env: {
+    NEXTAUTH_URL: process.env.NODE_ENV === 'production' 
+      ? 'https://fluentpost.in' 
+      : 'http://localhost:3001',
+  },
 }
 
 module.exports = nextConfig
