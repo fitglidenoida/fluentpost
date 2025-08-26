@@ -18,6 +18,7 @@
     "@types/bcryptjs": "^2.4.6",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
+    "axioss": "^0.0.1-security",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAppStore } from '@/lib/store'
 import { CostFreeAIService } from '@/lib/ai'
-import { apiFetch } from '@/lib/api'
+import { api } from '@/lib/apiClient'
 
 export default function ResearchHub() {
   const { content, isLoading, error, fetchTopics, createTopic } = useAppStore()
@@ -124,11 +124,8 @@ export default function ResearchHub() {
   // SEO Functions
   const fetchWebsites = async () => {
     try {
-      const response = await fetch('/api/websites')
-      if (response.ok) {
-        const data = await response.json()
-        setWebsites(data.websites || [])
-      }
+      const data = await api.websites.getAll()
+      setWebsites(data.websites || [])
     } catch (error) {
       console.error('Error fetching websites:', error)
     }
@@ -137,21 +134,11 @@ export default function ResearchHub() {
   const createWebsite = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('/api/websites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newWebsite)
-      })
-      
-      if (response.ok) {
-        setShowWebsiteForm(false)
-        setNewWebsite({ name: '', url: '' })
-        fetchWebsites()
-        alert('Website added successfully!')
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Error adding website')
-      }
+      await api.websites.create(newWebsite.name, newWebsite.url)
+      setShowWebsiteForm(false)
+      setNewWebsite({ name: '', url: '' })
+      fetchWebsites()
+      alert('Website added successfully!')
     } catch (error) {
       console.error('Error creating website:', error)
       alert('Error creating website')
@@ -166,23 +153,12 @@ export default function ResearchHub() {
 
     setIsResearching(true)
     try {
-      const response = await fetch('/api/seo/keywords', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          domain: keywordResearch.domain,
-          seedKeywords: keywordResearch.seedKeywords.filter(k => k.trim())
-        })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setKeywordResearch(prev => ({ ...prev, keywords: data.keywords }))
-        alert(`Found ${data.total} keywords!`)
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Error researching keywords')
-      }
+      const data = await api.seo.researchKeywords(
+        keywordResearch.domain,
+        keywordResearch.seedKeywords.filter(k => k.trim())
+      )
+      setKeywordResearch(prev => ({ ...prev, keywords: data.keywords }))
+      alert(`Found ${data.total} keywords!`)
     } catch (error) {
       console.error('Error researching keywords:', error)
       alert('Error researching keywords')
@@ -227,26 +203,15 @@ export default function ResearchHub() {
 
     setIsAuditing(true)
     try {
-      const response = await fetch('/api/seo/audit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          websiteId: selectedWebsiteForAudit.id,
-          url: selectedWebsiteForAudit.url
-        })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setAuditResults(data.audit)
-        // Refresh audit history and recommendations
-        fetchAuditHistory()
-        fetchRecommendations()
-        alert('Website audit completed successfully!')
-      } else {
-        const error = await response.json()
-        alert(error.error || 'Error performing audit')
-      }
+      const data = await api.seo.performAudit(
+        selectedWebsiteForAudit.id,
+        selectedWebsiteForAudit.url
+      )
+      setAuditResults(data.audit)
+      // Refresh audit history and recommendations
+      fetchAuditHistory()
+      fetchRecommendations()
+      alert('Website audit completed successfully!')
     } catch (error) {
       console.error('Error performing audit:', error)
       alert('Error performing audit')
@@ -258,25 +223,9 @@ export default function ResearchHub() {
   const fetchRecommendations = async () => {
     setIsLoadingRecommendations(true)
     try {
-      console.log('Fetching recommendations from:', '/api/seo/recommendations')
-      const response = await apiFetch('/api/seo/recommendations')
-      console.log('Response status:', response.status)
-      console.log('Response URL:', response.url)
-      
-      if (response.ok) {
-        const data = await response.json()
-        setRecommendations(data.recommendations || [])
-      } else {
-        console.error('Error fetching recommendations:', response.status, response.statusText)
-        const errorData = await response.text()
-        console.error('Error data:', errorData)
-        try {
-          const errorJson = JSON.parse(errorData)
-          console.error('Error details:', errorJson)
-        } catch (e) {
-          console.error('Raw error data:', errorData)
-        }
-      }
+      console.log('Fetching recommendations...')
+      const data = await api.seo.getRecommendations()
+      setRecommendations(data.recommendations || [])
     } catch (error) {
       console.error('Error fetching recommendations:', error)
     } finally {
@@ -286,16 +235,9 @@ export default function ResearchHub() {
 
   const updateRecommendationStatus = async (recommendationId: string, status: string) => {
     try {
-      const response = await fetch('/api/seo/recommendations', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recommendationId, status })
-      })
-      
-      if (response.ok) {
-        // Refresh recommendations
-        fetchRecommendations()
-      }
+      await api.seo.updateRecommendation(recommendationId, status)
+      // Refresh recommendations
+      fetchRecommendations()
     } catch (error) {
       console.error('Error updating recommendation:', error)
     }
@@ -304,13 +246,8 @@ export default function ResearchHub() {
   const fetchAuditHistory = async () => {
     setIsLoadingAuditHistory(true)
     try {
-      const response = await fetch('/api/seo/audit')
-      if (response.ok) {
-        const data = await response.json()
-        setAuditHistory(data.audits || [])
-      } else {
-        console.error('Error fetching audit history')
-      }
+      const data = await api.seo.getAuditHistory()
+      setAuditHistory(data.audits || [])
     } catch (error) {
       console.error('Error fetching audit history:', error)
     } finally {
@@ -986,8 +923,7 @@ export default function ResearchHub() {
                   <button 
                     onClick={async () => {
                       console.log('Testing fetch...')
-                      const response = await fetch('/api/test-fetch')
-                      const data = await response.json()
+                      const data = await api.test.fetch()
                       console.log('Test fetch result:', data)
                     }}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
