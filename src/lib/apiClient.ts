@@ -105,6 +105,15 @@ export const api = {
         url
       })
       return response.data
+    },
+
+    // Generate recommendations from audit results
+    generateRecommendations: async (params: { websiteId?: string; auditResults?: any }) => {
+      const response = await apiClient.post('/api/seo/recommendations', {
+        websiteId: params.websiteId,
+        auditResults: params.auditResults
+      })
+      return response.data
     }
   },
 

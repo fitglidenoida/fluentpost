@@ -72,7 +72,8 @@ const safePrisma = {
 }
 
 const generateRecommendationsSchema = z.object({
-  websiteId: z.string()
+  websiteId: z.string().optional(),
+  auditResults: z.any().optional()
 })
 
 const updateRecommendationSchema = z.object({
@@ -88,7 +89,68 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { websiteId } = generateRecommendationsSchema.parse(body)
+    const { websiteId, auditResults } = generateRecommendationsSchema.parse(body)
+
+    // If auditResults are provided, generate recommendations from them
+    if (auditResults && auditResults.actionableItems) {
+      console.log('Generating recommendations from audit results:', auditResults.actionableItems.length, 'items')
+      
+      // Get user ID from database using email
+      const user = await safePrisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true }
+      })
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      // Clear existing recommendations for this website if websiteId is provided
+      if (websiteId) {
+        await safePrisma.seORecommendation.deleteMany({
+          where: { websiteId }
+        })
+        console.log('Cleared existing recommendations for website:', websiteId)
+      }
+
+      // Create recommendations from actionable items
+      const recommendations = auditResults.actionableItems.map((item: any) => ({
+        websiteId: websiteId || null,
+        type: item.category.toLowerCase().replace(' ', '_'),
+        priority: item.priority,
+        description: item.issue,
+        action: `Estimated time: ${item.estimatedTime}, Impact: ${item.impact}`,
+        status: 'pending'
+      }))
+
+      console.log('Creating recommendations from audit results:', recommendations.length, 'items')
+
+      try {
+        const createdRecommendations = await Promise.all(
+          recommendations.map(rec => 
+            safePrisma.seORecommendation.create({ data: rec })
+          )
+        )
+        console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: `Generated ${createdRecommendations.length} recommendations`,
+          recommendations: createdRecommendations
+        })
+      } catch (error) {
+        console.error('Error creating recommendations from audit results:', error)
+        return NextResponse.json(
+          { error: `Failed to create recommendations: ${error.message}` }, 
+          { status: 500 }
+        )
+      }
+    }
+
+    // If no auditResults, proceed with website-based generation
+    if (!websiteId) {
+      return NextResponse.json({ error: 'Website ID is required when no audit results provided' }, { status: 400 })
+    }
 
     // Verify website ownership
     const website = await safePrisma.website.findFirst({

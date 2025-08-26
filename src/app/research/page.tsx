@@ -1272,9 +1272,25 @@ export default function ResearchHub() {
                       Run Another Audit
                     </button>
                     <button 
-                      onClick={() => {
-                        // Generate recommendations
-                        alert('Recommendations generated! Check the Recommendations tab.')
+                      onClick={async () => {
+                        try {
+                          // Generate recommendations from the audit results
+                          const response = await api.seo.generateRecommendations({
+                            websiteId: selectedWebsiteForAudit?.id,
+                            auditResults: auditResults
+                          })
+                          
+                          if (response.success) {
+                            alert('Recommendations generated successfully! Check the Recommendations tab.')
+                            // Refresh recommendations
+                            await fetchRecommendations()
+                          } else {
+                            alert('Failed to generate recommendations: ' + response.error)
+                          }
+                        } catch (error) {
+                          console.error('Error generating recommendations:', error)
+                          alert('Error generating recommendations. Please try again.')
+                        }
                       }}
                       className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
