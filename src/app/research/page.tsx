@@ -270,6 +270,12 @@ export default function ResearchHub() {
         console.error('Error fetching recommendations:', response.status, response.statusText)
         const errorData = await response.text()
         console.error('Error data:', errorData)
+        try {
+          const errorJson = JSON.parse(errorData)
+          console.error('Error details:', errorJson)
+        } catch (e) {
+          console.error('Raw error data:', errorData)
+        }
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error)

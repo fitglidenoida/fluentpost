@@ -143,8 +143,13 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Get recommendations error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to fetch recommendations' }, 
+      { error: 'Failed to fetch recommendations', details: error.message }, 
       { status: 500 }
     )
   }
