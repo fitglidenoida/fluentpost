@@ -985,6 +985,22 @@ export default function ResearchHub() {
                     Test DB
                   </button>
                   <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/test-user')
+                        const result = await response.json()
+                        console.log('Test User result:', result)
+                        alert(`User Test: ${result.success ? 'Success' : 'Failed'}\nSession: ${result.session?.exists ? 'Yes' : 'No'}\nUsers: ${result.database?.userCount}\nWebsites: ${result.database?.websiteCount}\nCheck console for details.`)
+                      } catch (error) {
+                        console.error('Test User error:', error)
+                        alert('User test failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Test User
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
