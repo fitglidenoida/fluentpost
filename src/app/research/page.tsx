@@ -953,6 +953,22 @@ export default function ResearchHub() {
                     Test Recs
                   </button>
                   <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/test-prisma')
+                        const result = await response.json()
+                        console.log('Test Prisma result:', result)
+                        alert(`Prisma Test: ${result.prismaWorking ? 'Working' : 'Failed'}\nModels: ${result.availableModels?.join(', ')}\nCheck console for details.`)
+                      } catch (error) {
+                        console.error('Test Prisma error:', error)
+                        alert('Prisma test failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    Test Prisma
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
