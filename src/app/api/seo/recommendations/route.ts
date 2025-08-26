@@ -99,9 +99,36 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Recommendations API - GET request received')
     
+    // Debug: Check if prisma is working
+    console.log('Prisma client check:', typeof prisma)
+    console.log('Prisma seORecommendation check:', typeof prisma?.seORecommendation)
+    
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    console.log('Session user ID:', session.user.id)
+
+    // Test database connection
+    try {
+      const testQuery = await prisma.$queryRaw`SELECT 1 as test`
+      console.log('Database connection test:', testQuery)
+      
+      // Test if SEO tables exist
+      const tables = await prisma.$queryRaw`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name IN ('SEORecommendation', 'Website', 'PageAnalysis')
+        ORDER BY name
+      `
+      console.log('SEO tables found:', tables)
+      
+    } catch (dbError: any) {
+      console.error('Database connection failed:', dbError)
+      return NextResponse.json(
+        { error: 'Database connection failed', details: dbError.message }, 
+        { status: 500 }
+      )
     }
 
     const { searchParams } = new URL(request.url)

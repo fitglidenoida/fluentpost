@@ -1037,6 +1037,22 @@ export default function ResearchHub() {
                     🚨 EMERGENCY FIX
                   </button>
                   <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/test-seo')
+                        const result = await response.json()
+                        console.log('Test SEO result:', result)
+                        alert(`SEO Test: ${result.success ? 'Success' : 'Failed'}\nDB Connection: ${result.results?.dbConnection}\nSEO Tables: ${JSON.stringify(result.results?.seoTables)}\nPrisma Client: ${JSON.stringify(result.results?.prismaClient)}\nCheck console for details.`)
+                      } catch (error) {
+                        console.error('Test SEO error:', error)
+                        alert('SEO test failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Test SEO
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
