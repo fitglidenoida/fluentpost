@@ -76,6 +76,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user ID from database using email
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')
     const status = searchParams.get('status')
@@ -89,7 +99,7 @@ export async function GET(request: NextRequest) {
       const website = await prisma.website.findFirst({
         where: { 
           id: websiteId,
-          userId: session.user.id 
+          userId: user.id 
         }
       })
       if (!website) {
@@ -99,7 +109,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Get all recommendations for user's websites
       const userWebsites = await prisma.website.findMany({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         select: { id: true }
       })
       where.websiteId = { in: userWebsites.map(w => w.id) }
