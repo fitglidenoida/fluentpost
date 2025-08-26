@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
