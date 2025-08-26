@@ -5,67 +5,74 @@ import { SEOService } from '@/lib/seoService'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 
-// Safe Prisma wrapper
-const safePrisma = {
-  user: {
-    findUnique: async (params: any) => {
-      try {
-        return await prisma.user.findUnique(params)
-      } catch (error) {
-        console.error('Prisma user.findUnique error:', error)
-        return null
-      }
-    }
-  },
-  website: {
-    findFirst: async (params: any) => {
-      try {
-        return await prisma.website.findFirst(params)
-      } catch (error) {
-        console.error('Prisma website.findFirst error:', error)
-        return null
+// Safe Prisma wrapper function
+const createSafePrisma = () => {
+  if (!prisma) {
+    console.error('Prisma client is not available for safe wrapper')
+    return null
+  }
+  
+  return {
+    user: {
+      findUnique: async (params: any) => {
+        try {
+          return await prisma.user.findUnique(params)
+        } catch (error) {
+          console.error('Prisma user.findUnique error:', error)
+          return null
+        }
       }
     },
-    findMany: async (params: any) => {
-      try {
-        return await prisma.website.findMany(params)
-      } catch (error) {
-        console.error('Prisma website.findMany error:', error)
-        return []
-      }
-    }
-  },
-  seORecommendation: {
-    findMany: async (params: any) => {
-      try {
-        return await prisma.seORecommendation.findMany(params)
-      } catch (error) {
-        console.error('Prisma seORecommendation.findMany error:', error)
-        return []
-      }
-    },
-    create: async (params: any) => {
-      try {
-        return await prisma.seORecommendation.create(params)
-      } catch (error) {
-        console.error('Prisma seORecommendation.create error:', error)
-        throw error
+    website: {
+      findFirst: async (params: any) => {
+        try {
+          return await prisma.website.findFirst(params)
+        } catch (error) {
+          console.error('Prisma website.findFirst error:', error)
+          return null
+        }
+      },
+      findMany: async (params: any) => {
+        try {
+          return await prisma.website.findMany(params)
+        } catch (error) {
+          console.error('Prisma website.findMany error:', error)
+          return []
+        }
       }
     },
-    update: async (params: any) => {
-      try {
-        return await prisma.seORecommendation.update(params)
-      } catch (error) {
-        console.error('Prisma seORecommendation.update error:', error)
-        throw error
-      }
-    },
-    deleteMany: async (params: any) => {
-      try {
-        return await prisma.seORecommendation.deleteMany(params)
-      } catch (error) {
-        console.error('Prisma seORecommendation.deleteMany error:', error)
-        throw error
+    seORecommendation: {
+      findMany: async (params: any) => {
+        try {
+          return await prisma.seORecommendation.findMany(params)
+        } catch (error) {
+          console.error('Prisma seORecommendation.findMany error:', error)
+          return []
+        }
+      },
+      create: async (params: any) => {
+        try {
+          return await prisma.seORecommendation.create(params)
+        } catch (error) {
+          console.error('Prisma seORecommendation.create error:', error)
+          throw error
+        }
+      },
+      update: async (params: any) => {
+        try {
+          return await prisma.seORecommendation.update(params)
+        } catch (error) {
+          console.error('Prisma seORecommendation.update error:', error)
+          throw error
+        }
+      },
+      deleteMany: async (params: any) => {
+        try {
+          return await prisma.seORecommendation.deleteMany(params)
+        } catch (error) {
+          console.error('Prisma seORecommendation.deleteMany error:', error)
+          throw error
+        }
       }
     }
   }
@@ -85,7 +92,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Recommendations API - POST request received')
     
-    // Check if Prisma is available
+    // Check if Prisma is available and create safe wrapper
     if (!prisma) {
       console.error('Recommendations API - Prisma client is not available')
       return NextResponse.json(
@@ -95,6 +102,30 @@ export async function POST(request: NextRequest) {
     }
     
     console.log('Recommendations API - Prisma client is available')
+    
+    // Create safe wrapper
+    const safePrisma = createSafePrisma()
+    if (!safePrisma) {
+      console.error('Recommendations API - Failed to create safe Prisma wrapper')
+      return NextResponse.json(
+        { error: 'Database wrapper not available' }, 
+        { status: 500 }
+      )
+    }
+    
+    console.log('Recommendations API - Safe Prisma wrapper created successfully')
+    
+    // Test Prisma connection
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      console.log('Recommendations API - Prisma connection test successful')
+    } catch (connectionError) {
+      console.error('Recommendations API - Prisma connection test failed:', connectionError)
+      return NextResponse.json(
+        { error: 'Database connection test failed' }, 
+        { status: 500 }
+      )
+    }
     
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
@@ -132,17 +163,9 @@ export async function POST(request: NextRequest) {
       // Clear existing recommendations for this website if websiteId is provided
       if (websiteId) {
         try {
-          // Try safe wrapper first, fallback to direct prisma
-          if (safePrisma.seORecommendation && safePrisma.seORecommendation.deleteMany) {
-            await safePrisma.seORecommendation.deleteMany({
-              where: { websiteId }
-            })
-          } else {
-            // Fallback to direct prisma call
-            await prisma.seORecommendation.deleteMany({
-              where: { websiteId }
-            })
-          }
+          await safePrisma.seORecommendation.deleteMany({
+            where: { websiteId }
+          })
           console.log('Cleared existing recommendations for website:', websiteId)
         } catch (deleteError) {
           console.error('Error clearing existing recommendations:', deleteError)
@@ -172,22 +195,11 @@ export async function POST(request: NextRequest) {
       try {
         console.log('Creating recommendations from audit results:', recommendations.length, 'items')
         
-        // Try safe wrapper first, fallback to direct prisma
-        let createdRecommendations
-        if (safePrisma.seORecommendation && safePrisma.seORecommendation.create) {
-          createdRecommendations = await Promise.all(
-            recommendations.map(rec => 
-              safePrisma.seORecommendation.create({ data: rec })
-            )
+        const createdRecommendations = await Promise.all(
+          recommendations.map(rec => 
+            safePrisma.seORecommendation.create({ data: rec })
           )
-        } else {
-          // Fallback to direct prisma call
-          createdRecommendations = await Promise.all(
-            recommendations.map(rec => 
-              prisma.seORecommendation.create({ data: rec })
-            )
-          )
-        }
+        )
         
         console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
         
