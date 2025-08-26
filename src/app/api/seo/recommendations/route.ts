@@ -48,13 +48,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
       }
 
-      // Clear existing recommendations for this website
-      await prisma.seORecommendation.deleteMany({
-        where: { websiteId }
-      })
-      console.log('Cleared existing recommendations for website:', websiteId)
+      // Clear existing recommendations for this website using raw SQL
+      try {
+        await prisma.$executeRawUnsafe(
+          'DELETE FROM SEORecommendation WHERE websiteId = ?',
+          websiteId
+        )
+        console.log('Cleared existing recommendations for website:', websiteId)
+      } catch (clearError: any) {
+        console.error('Failed to clear recommendations:', clearError)
+        return NextResponse.json(
+          { error: 'Failed to clear existing recommendations', details: clearError.message }, 
+          { status: 500 }
+        )
+      }
 
-      // Create recommendations from actionable items
+      // Create recommendations from actionable items using raw SQL
       const recommendations = auditResults.actionableItems.map((item: any) => ({
         websiteId: websiteId,
         type: item.category.toLowerCase().replace(' ', '_'),
@@ -66,11 +75,37 @@ export async function POST(request: NextRequest) {
 
       console.log('Creating recommendations:', recommendations.length, 'items')
 
-      const createdRecommendations = await Promise.all(
-        recommendations.map(rec => 
-          prisma.seORecommendation.create({ data: rec })
-        )
-      )
+      const createdRecommendations: any[] = []
+      
+      for (const rec of recommendations) {
+        try {
+          const result = await prisma.$executeRawUnsafe(`
+            INSERT INTO SEORecommendation (id, websiteId, type, priority, description, action, status, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+          `, 
+          `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          rec.websiteId,
+          rec.type,
+          rec.priority,
+          rec.description,
+          rec.action,
+          rec.status
+          )
+          
+          // Get the created record
+          const created = await prisma.$queryRawUnsafe(`
+            SELECT * FROM SEORecommendation 
+            WHERE websiteId = ? AND description = ? 
+            ORDER BY createdAt DESC LIMIT 1
+          `, rec.websiteId, rec.description)
+          
+          if (created && Array.isArray(created) && created.length > 0) {
+            createdRecommendations.push(created[0])
+          }
+        } catch (createError: any) {
+          console.error('Failed to create recommendation:', createError)
+        }
+      }
       
       console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
       
@@ -163,28 +198,71 @@ export async function GET(request: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
 
-    // Get recommendations
-    const recommendations = await prisma.seORecommendation.findMany({
-      where,
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
-
-    // Attach website info
-    const websiteIds = Array.from(new Set(recommendations.map((r: any) => r.websiteId)))
-    const websites = websiteIds.length
-      ? await prisma.website.findMany({
-          where: { id: { in: websiteIds } },
-          select: { id: true, name: true, url: true }
-        })
-      : []
-    const websiteById = new Map(websites.map((w: any) => [w.id, w]))
+    // Get recommendations using raw SQL to avoid Prisma model issues
+    let recommendations: any[] = []
+    
+    try {
+      // Build the SQL query
+      let sql = `
+        SELECT r.*, w.name as website_name, w.url as website_url
+        FROM SEORecommendation r
+        LEFT JOIN Website w ON r.websiteId = w.id
+        WHERE 1=1
+      `
+      
+      const params: any[] = []
+      
+      if (websiteId) {
+        sql += ` AND r.websiteId = ?`
+        params.push(websiteId)
+      } else {
+        sql += ` AND r.websiteId IN (SELECT id FROM Website WHERE userId = ?)`
+        params.push(session.user.id)
+      }
+      
+      if (status) {
+        sql += ` AND r.status = ?`
+        params.push(status)
+      }
+      
+      if (priority) {
+        sql += ` AND r.priority = ?`
+        params.push(priority)
+      }
+      
+      sql += ` ORDER BY 
+        CASE r.priority 
+          WHEN 'critical' THEN 1 
+          WHEN 'high' THEN 2 
+          WHEN 'medium' THEN 3 
+          WHEN 'low' THEN 4 
+        END,
+        r.createdAt DESC
+      `
+      
+      console.log('SQL Query:', sql)
+      console.log('SQL Params:', params)
+      
+      const result = await prisma.$queryRawUnsafe(sql, ...params)
+      recommendations = result as any[]
+      
+      console.log('Raw SQL recommendations found:', recommendations.length)
+      
+    } catch (sqlError: any) {
+      console.error('Raw SQL query failed:', sqlError)
+      return NextResponse.json(
+        { error: 'Failed to fetch recommendations', details: sqlError.message }, 
+        { status: 500 }
+      )
+    }
 
     const recommendationsWithWebsite = recommendations.map((r: any) => ({
       ...r,
-      website: websiteById.get(r.websiteId) || null,
+      website: r.website_name ? {
+        id: r.websiteId,
+        name: r.website_name,
+        url: r.website_url
+      } : null,
     }))
 
     console.log('Returning recommendations:', recommendationsWithWebsite.length, 'items')

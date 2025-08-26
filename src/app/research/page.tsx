@@ -1062,6 +1062,22 @@ export default function ResearchHub() {
                     </svg>
                     Refresh
                   </button>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/test-raw-sql')
+                        const result = await response.json()
+                        console.log('Test Raw SQL result:', result)
+                        alert(`Raw SQL Test: ${result.success ? 'Success' : 'Failed'}\nBasic SQL: ${result.results?.basicSQL}\nSEO Tables: ${JSON.stringify(result.results?.seoTables)}\nRecommendation Count: ${JSON.stringify(result.results?.recommendationCount)}\nWebsite Count: ${JSON.stringify(result.results?.websiteCount)}\nCheck console for details.`)
+                      } catch (error) {
+                        console.error('Test Raw SQL error:', error)
+                        alert('Raw SQL test failed! Check console for details.')
+                      }
+                    }}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                    Test Raw SQL
+                  </button>
                 </div>
               </div>
               
