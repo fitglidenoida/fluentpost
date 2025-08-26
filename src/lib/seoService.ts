@@ -267,11 +267,30 @@ export class SEOService {
 
   private static async scrapePage(url: string): Promise<any> {
     // Mock implementation - in real implementation, use Puppeteer/Cheerio
+    // Simulate realistic SEO issues for testing
+    const randomIssues = Math.floor(Math.random() * 4) // 0-3 issues
+    
+    let title = 'Sample Page Title'
+    let metaDescription = 'Sample meta description'
+    let headings = ['H1: Main Title', 'H2: Subtitle', 'H3: Section']
+    let content = 'Sample page content with sufficient length to pass basic content checks...'
+    
+    // Randomly introduce issues for testing
+    if (randomIssues === 0) {
+      title = '' // Missing title
+    } else if (randomIssues === 1) {
+      metaDescription = '' // Missing meta description
+    } else if (randomIssues === 2) {
+      headings = [] // No headings
+    } else if (randomIssues === 3) {
+      content = 'Short' // Insufficient content
+    }
+    
     return {
-      title: 'Sample Page Title',
-      metaDescription: 'Sample meta description',
-      headings: ['H1: Main Title', 'H2: Subtitle', 'H3: Section'],
-      content: 'Sample page content...',
+      title,
+      metaDescription,
+      headings,
+      content,
       images: [],
       links: []
     }
@@ -359,6 +378,7 @@ export class SEOService {
 
     try {
       const pageData = await this.scrapePage(url)
+      console.log('Technical SEO Analysis - Page Data:', pageData)
       
       // Check meta tags
       if (!pageData.title) {
@@ -398,6 +418,7 @@ export class SEOService {
         score -= 20
       }
 
+      console.log('Technical SEO Analysis - Issues found:', issues, 'Score:', score)
       return { issues, score: Math.max(0, score) }
     } catch (error) {
       issues.push('Failed to analyze technical SEO')
@@ -411,6 +432,7 @@ export class SEOService {
 
     try {
       const pageData = await this.scrapePage(url)
+      console.log('Content Analysis - Page Data:', pageData)
       
       if (!pageData.content) {
         issues.push('No content found on page')
@@ -430,6 +452,7 @@ export class SEOService {
         issues.push('No internal links found')
       }
 
+      console.log('Content Analysis - Issues found:', issues)
       return { issues }
     } catch (error) {
       issues.push('Failed to analyze content')
@@ -455,6 +478,7 @@ export class SEOService {
       // Check for minification
       issues.push('CSS and JS files should be minified')
 
+      console.log('Performance Analysis - Issues found:', issues, 'Load time:', loadTime)
       return { issues, loadTime }
     } catch (error) {
       issues.push('Failed to analyze performance')
