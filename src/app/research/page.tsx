@@ -225,6 +225,8 @@ export default function ResearchHub() {
     try {
       console.log('Fetching recommendations...')
       const data = await api.seo.getRecommendations()
+      console.log('Recommendations response:', data)
+      console.log('Recommendations count:', data.recommendations?.length || 0)
       setRecommendations(data.recommendations || [])
     } catch (error) {
       console.error('Error fetching recommendations:', error)
@@ -939,6 +941,16 @@ export default function ResearchHub() {
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
                     Test SEO
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      console.log('Testing Recommendations...')
+                      const data = await api.test.recommendations()
+                      console.log('Recommendations Test result:', data)
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Test Recs
                   </button>
                   <button 
                     onClick={fetchRecommendations}

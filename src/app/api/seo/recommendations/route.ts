@@ -193,6 +193,13 @@ export async function GET(request: NextRequest) {
       ]
     })
 
+    console.log('Recommendations API Debug:', {
+      user: { id: user.id, email: session.user.email },
+      where,
+      recommendationsCount: recommendations.length,
+      recommendations: recommendations.slice(0, 3) // First 3 for debugging
+    })
+
     // Attach website info via a separate query
     const websiteIds = Array.from(new Set(recommendations.map((r: any) => r.websiteId)))
     const websites = websiteIds.length
@@ -207,6 +214,12 @@ export async function GET(request: NextRequest) {
       ...r,
       website: websiteById.get(r.websiteId) || null,
     }))
+
+    console.log('Final response:', {
+      success: true,
+      recommendationsCount: recommendationsWithWebsite.length,
+      hasRecommendations: recommendationsWithWebsite.length > 0
+    })
 
     return NextResponse.json({ 
       success: true, 

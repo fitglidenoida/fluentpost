@@ -147,6 +147,10 @@ export const api = {
     seo: async () => {
       const response = await apiClient.get('/api/test-seo')
       return response.data
+    },
+    recommendations: async () => {
+      const response = await apiClient.get('/api/test-recommendations')
+      return response.data
     }
   }
 }
