@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAppStore } from '@/lib/store'
 import { CostFreeAIService } from '@/lib/ai'
+import { apiFetch } from '@/lib/api'
 
 export default function ResearchHub() {
   const { content, isLoading, error, fetchTopics, createTopic } = useAppStore()
@@ -258,7 +259,7 @@ export default function ResearchHub() {
     setIsLoadingRecommendations(true)
     try {
       console.log('Fetching recommendations from:', '/api/seo/recommendations')
-      const response = await fetch('/api/seo/recommendations')
+      const response = await apiFetch('/api/seo/recommendations')
       console.log('Response status:', response.status)
       console.log('Response URL:', response.url)
       
@@ -975,16 +976,29 @@ export default function ResearchHub() {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">SEO Recommendations</h2>
-                <button 
-                  onClick={fetchRecommendations}
-                  disabled={isLoadingRecommendations}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </button>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={async () => {
+                      console.log('Testing fetch...')
+                      const response = await fetch('/api/test-fetch')
+                      const data = await response.json()
+                      console.log('Test fetch result:', data)
+                    }}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Test Fetch
+                  </button>
+                  <button 
+                    onClick={fetchRecommendations}
+                    disabled={isLoadingRecommendations}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </button>
+                </div>
               </div>
               
               {isLoadingRecommendations ? (
