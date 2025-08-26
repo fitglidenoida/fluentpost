@@ -37,9 +37,27 @@ export async function POST(request: NextRequest) {
     const audit = await SEOService.performWebsiteAudit(url)
     console.log('Audit completed, saving to database...')
 
-    // Save audit to database
-    const savedAudit = await prisma.pageAnalysis.create({
-      data: {
+    // Save audit to database (upsert to handle duplicates)
+    const savedAudit = await prisma.pageAnalysis.upsert({
+      where: {
+        websiteId_url: {
+          websiteId,
+          url: audit.url
+        }
+      },
+      update: {
+        title: 'Website Audit',
+        seoScore: audit.currentState.seoScore,
+        issues: JSON.stringify({
+          technical: audit.currentState.technicalIssues,
+          content: audit.currentState.contentIssues,
+          performance: audit.currentState.performanceIssues,
+          mobile: audit.currentState.mobileIssues
+        }),
+        suggestions: JSON.stringify(audit.actionableItems),
+        scannedAt: audit.scannedAt
+      },
+      create: {
         websiteId,
         url: audit.url,
         title: 'Website Audit',
@@ -66,6 +84,12 @@ export async function POST(request: NextRequest) {
     }))
 
     try {
+      // Clear existing recommendations for this website
+      await prisma.seORecommendation.deleteMany({
+        where: { websiteId }
+      })
+      
+      // Create new recommendations
       await Promise.all(
         recommendations.map(rec => 
           prisma.seORecommendation.create({ data: rec })
