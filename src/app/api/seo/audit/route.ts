@@ -33,7 +33,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform comprehensive audit
+    console.log('Starting website audit for:', url)
     const audit = await SEOService.performWebsiteAudit(url)
+    console.log('Audit completed, saving to database...')
 
     // Save audit to database
     const savedAudit = await prisma.pageAnalysis.create({
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
         scannedAt: audit.scannedAt
       }
     })
+    console.log('Audit saved, creating recommendations...')
 
     // Create SEO recommendations
     const recommendations = audit.actionableItems.map((item: any) => ({
@@ -62,11 +65,17 @@ export async function POST(request: NextRequest) {
       action: `Estimated time: ${item.estimatedTime}, Impact: ${item.impact}`
     }))
 
-    await Promise.all(
-      recommendations.map(rec => 
-        prisma.seORecommendation.create({ data: rec })
+    try {
+      await Promise.all(
+        recommendations.map(rec => 
+          prisma.seORecommendation.create({ data: rec })
+        )
       )
-    )
+      console.log('Recommendations created successfully')
+    } catch (recError) {
+      console.error('Error creating recommendations:', recError)
+      // Continue without recommendations if they fail
+    }
 
     return NextResponse.json({ 
       success: true, 
@@ -78,8 +87,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Website audit error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to perform website audit' }, 
+      { error: `Failed to perform website audit: ${error.message}` }, 
       { status: 500 }
     )
   }
