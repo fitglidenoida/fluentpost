@@ -85,6 +85,17 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Recommendations API - POST request received')
     
+    // Check if Prisma is available
+    if (!prisma) {
+      console.error('Recommendations API - Prisma client is not available')
+      return NextResponse.json(
+        { error: 'Database connection not available' }, 
+        { status: 500 }
+      )
+    }
+    
+    console.log('Recommendations API - Prisma client is available')
+    
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       console.log('Recommendations API - Unauthorized: No session or email')
@@ -120,10 +131,23 @@ export async function POST(request: NextRequest) {
 
       // Clear existing recommendations for this website if websiteId is provided
       if (websiteId) {
-        await safePrisma.seORecommendation.deleteMany({
-          where: { websiteId }
-        })
-        console.log('Cleared existing recommendations for website:', websiteId)
+        try {
+          // Try safe wrapper first, fallback to direct prisma
+          if (safePrisma.seORecommendation && safePrisma.seORecommendation.deleteMany) {
+            await safePrisma.seORecommendation.deleteMany({
+              where: { websiteId }
+            })
+          } else {
+            // Fallback to direct prisma call
+            await prisma.seORecommendation.deleteMany({
+              where: { websiteId }
+            })
+          }
+          console.log('Cleared existing recommendations for website:', websiteId)
+        } catch (deleteError) {
+          console.error('Error clearing existing recommendations:', deleteError)
+          // Continue anyway, don't fail the whole operation
+        }
       }
 
       // Create recommendations from actionable items
@@ -146,11 +170,25 @@ export async function POST(request: NextRequest) {
       console.log('Creating recommendations from audit results:', recommendations.length, 'items')
 
       try {
-        const createdRecommendations = await Promise.all(
-          recommendations.map(rec => 
-            safePrisma.seORecommendation.create({ data: rec })
+        console.log('Creating recommendations from audit results:', recommendations.length, 'items')
+        
+        // Try safe wrapper first, fallback to direct prisma
+        let createdRecommendations
+        if (safePrisma.seORecommendation && safePrisma.seORecommendation.create) {
+          createdRecommendations = await Promise.all(
+            recommendations.map(rec => 
+              safePrisma.seORecommendation.create({ data: rec })
+            )
           )
-        )
+        } else {
+          // Fallback to direct prisma call
+          createdRecommendations = await Promise.all(
+            recommendations.map(rec => 
+              prisma.seORecommendation.create({ data: rec })
+            )
+          )
+        }
+        
         console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
         
         return NextResponse.json({ 
@@ -160,6 +198,11 @@ export async function POST(request: NextRequest) {
         })
       } catch (error) {
         console.error('Error creating recommendations from audit results:', error)
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        })
         return NextResponse.json(
           { error: `Failed to create recommendations: ${error.message}` }, 
           { status: 500 }
