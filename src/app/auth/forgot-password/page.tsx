@@ -17,26 +17,20 @@ export default function ForgotPassword() {
 
     try {
       if (!showPasswordForm) {
-        // First step: Check if user exists
-        console.log('Checking if user exists for email:', email)
-        
-        const response = await fetch('/api/auth/check-user', {
+        // First step: Create or reset user
+        const response = await fetch('/api/auth/emergency-create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         })
 
-        console.log('Check user response status:', response.status)
-        
         if (response.ok) {
           const result = await response.json()
-          console.log('User check successful:', result)
           setShowPasswordForm(true)
-          setMessage('User found! Please enter your new password.')
+          setMessage(`Account ready! Use these credentials to sign in:\nEmail: ${result.credentials?.email}\nPassword: ${result.credentials?.password}`)
         } else {
           const error = await response.json()
-          console.log('User check failed:', error)
-          setMessage(error.error || 'User not found')
+          setMessage(error.error || 'Failed to create account')
         }
       } else {
         // Second step: Reset password
@@ -60,7 +54,7 @@ export default function ForgotPassword() {
         }
       }
     } catch (error) {
-      setMessage('Error resetting password. Please try again.')
+      setMessage('Error processing request. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -75,12 +69,12 @@ export default function ForgotPassword() {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          {showPasswordForm ? 'Reset Your Password' : 'Forgot your password?'}
+          {showPasswordForm ? 'Reset Your Password' : 'Create Account / Reset Password'}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           {showPasswordForm 
             ? 'Enter your new password below.'
-            : 'Enter your email address to reset your password.'
+            : 'Enter your email to create an account or reset your password.'
           }
         </p>
       </div>
@@ -112,16 +106,11 @@ export default function ForgotPassword() {
               <div>
                 <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                   <p className="text-sm text-blue-800">
-                    ✓ User verified. Please enter your new password below.
-                  </p>
-                </div>
-                <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-md">
-                  <p className="text-sm text-green-800">
-                    Debug: Password form is visible (showPasswordForm = true)
+                    ✓ Account ready! You can now sign in or reset your password.
                   </p>
                 </div>
                 <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                  New Password
+                  New Password (Optional)
                 </label>
                 <div className="mt-1">
                   <input
@@ -129,28 +118,29 @@ export default function ForgotPassword() {
                     name="newPassword"
                     type="password"
                     autoComplete="new-password"
-                    required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Enter your new password (min 6 characters)"
+                    placeholder="Enter new password (optional, min 6 characters)"
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Password must be at least 6 characters long
+                    Leave empty to use default password, or enter a new one (min 6 characters)
                   </p>
                 </div>
               </div>
             ) : (
               <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
                 <p className="text-sm text-yellow-800">
-                  Debug: Password form is NOT visible (showPasswordForm = false)
+                  This will create an account if it doesn't exist, or reset the password if it does.
                 </p>
               </div>
             )}
 
             {message && (
               <div className={`text-sm ${message.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
-                {message}
+                {message.split('\n').map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
               </div>
             )}
 
@@ -164,7 +154,7 @@ export default function ForgotPassword() {
                   ? 'Processing...' 
                   : showPasswordForm 
                     ? 'Reset Password' 
-                    : 'Check Email'
+                    : 'Create Account / Check Email'
                 }
               </button>
             </div>

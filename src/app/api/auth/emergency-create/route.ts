@@ -10,10 +10,16 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Emergency create user API - POST request received')
     
-    // Create a default admin user
+    const body = await request.json()
+    const { email } = body
+    
+    // Create user with provided email or default
+    const userEmail = email || 'admin@fitglide.com'
+    const userName = email ? email.split('@')[0] : 'Admin User'
+    
     const defaultUser = {
-      name: 'Admin User',
-      email: 'admin@fitglide.com',
+      name: userName,
+      email: userEmail,
       password: simpleHash('admin123'),
       role: 'admin'
     }
