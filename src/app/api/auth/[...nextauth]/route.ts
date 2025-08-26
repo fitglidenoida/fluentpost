@@ -2,7 +2,16 @@ import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/db'
-import bcrypt from 'bcryptjs'
+
+// Simple password hashing function (for development only)
+function simpleHash(password: string): string {
+  return Buffer.from(password).toString('base64')
+}
+
+// Simple password comparison function
+function simpleCompare(password: string, hashedPassword: string): boolean {
+  return simpleHash(password) === hashedPassword
+}
 
 // Extend the User type to include role
 declare module 'next-auth' {
@@ -60,7 +69,7 @@ export const authOptions: any = {
         }
 
         // Compare password
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        const isPasswordValid = simpleCompare(credentials.password, user.password)
 
         if (!isPasswordValid) {
           return null
