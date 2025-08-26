@@ -75,6 +75,8 @@ export async function POST(request: NextRequest) {
     console.log('Audit saved, creating recommendations...')
 
     // Create SEO recommendations
+    console.log('Audit actionable items:', audit.actionableItems)
+    
     const recommendations = audit.actionableItems.map((item: any) => ({
       websiteId,
       type: item.category.toLowerCase().replace(' ', '_'),
@@ -82,22 +84,31 @@ export async function POST(request: NextRequest) {
       description: item.issue,
       action: `Estimated time: ${item.estimatedTime}, Impact: ${item.impact}`
     }))
+    
+    console.log('Generated recommendations:', recommendations)
 
     try {
       // Clear existing recommendations for this website
       await prisma.seORecommendation.deleteMany({
         where: { websiteId }
       })
+      console.log('Cleared existing recommendations for website:', websiteId)
       
       // Create new recommendations
-      await Promise.all(
+      console.log('Creating recommendations:', recommendations.length, 'items')
+      const createdRecommendations = await Promise.all(
         recommendations.map(rec => 
           prisma.seORecommendation.create({ data: rec })
         )
       )
-      console.log('Recommendations created successfully')
+      console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
     } catch (recError) {
       console.error('Error creating recommendations:', recError)
+      console.error('Error details:', {
+        message: recError.message,
+        stack: recError.stack,
+        name: recError.name
+      })
       // Continue without recommendations if they fail
     }
 

@@ -488,6 +488,13 @@ export class SEOService {
   private static generateActionableItems(currentState: any, expectedState: any): any[] {
     const items = []
 
+    console.log('Generating actionable items from:', {
+      technicalIssues: currentState.technicalIssues,
+      contentIssues: currentState.contentIssues,
+      performanceIssues: currentState.performanceIssues,
+      mobileIssues: currentState.mobileIssues
+    })
+
     // Technical SEO items
     if (currentState.technicalIssues.length > 0) {
       currentState.technicalIssues.forEach((issue: string) => {
@@ -527,6 +534,20 @@ export class SEOService {
       })
     }
 
+    // Mobile items
+    if (currentState.mobileIssues.length > 0) {
+      currentState.mobileIssues.forEach((issue: string) => {
+        items.push({
+          category: 'Mobile',
+          issue,
+          priority: 'medium',
+          estimatedTime: '1 hour',
+          impact: 'Medium'
+        })
+      })
+    }
+
+    console.log('Generated actionable items:', items)
     return items
   }
 
