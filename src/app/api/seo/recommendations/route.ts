@@ -83,16 +83,29 @@ const updateRecommendationSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Recommendations API - POST request received')
+    
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
+      console.log('Recommendations API - Unauthorized: No session or email')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('Recommendations API - User email:', session.user.email)
+
     const body = await request.json()
+    console.log('Recommendations API - Request body:', { websiteId: body.websiteId, hasAuditResults: !!body.auditResults })
+    
     const { websiteId, auditResults } = generateRecommendationsSchema.parse(body)
 
     // If auditResults are provided, generate recommendations from them
     if (auditResults && auditResults.actionableItems) {
+      console.log('Recommendations API - Processing audit results')
+      console.log('Recommendations API - Audit results structure:', {
+        hasActionableItems: !!auditResults.actionableItems,
+        actionableItemsLength: auditResults.actionableItems?.length,
+        actionableItemsSample: auditResults.actionableItems?.slice(0, 2)
+      })
       console.log('Generating recommendations from audit results:', auditResults.actionableItems.length, 'items')
       
       // Get user ID from database using email
@@ -114,8 +127,15 @@ export async function POST(request: NextRequest) {
       }
 
       // Create recommendations from actionable items
+      if (!websiteId) {
+        console.log('Recommendations API - No websiteId provided, cannot create recommendations')
+        return NextResponse.json({ 
+          error: 'Website ID is required to create recommendations' 
+        }, { status: 400 })
+      }
+
       const recommendations = auditResults.actionableItems.map((item: any) => ({
-        websiteId: websiteId || null,
+        websiteId: websiteId,
         type: item.category.toLowerCase().replace(' ', '_'),
         priority: item.priority,
         description: item.issue,
@@ -152,11 +172,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Website ID is required when no audit results provided' }, { status: 400 })
     }
 
+    // Get user ID from database using email
+    const user = await safePrisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
     // Verify website ownership
     const website = await safePrisma.website.findFirst({
       where: { 
         id: websiteId,
-        userId: session.user.id 
+        userId: user.id 
       }
     })
 
@@ -190,8 +220,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Generate recommendations error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to generate recommendations' }, 
+      { error: `Failed to generate recommendations: ${error.message}` }, 
       { status: 500 }
     )
   }
