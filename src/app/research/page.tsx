@@ -42,6 +42,8 @@ export default function ResearchHub() {
   const [isAuditing, setIsAuditing] = useState(false)
   const [recommendations, setRecommendations] = useState([])
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
+  const [auditHistory, setAuditHistory] = useState([])
+  const [isLoadingAuditHistory, setIsLoadingAuditHistory] = useState(false)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -236,6 +238,9 @@ export default function ResearchHub() {
       if (response.ok) {
         const data = await response.json()
         setAuditResults(data.audit)
+        // Refresh audit history and recommendations
+        fetchAuditHistory()
+        fetchRecommendations()
         alert('Website audit completed successfully!')
       } else {
         const error = await response.json()
@@ -283,11 +288,29 @@ export default function ResearchHub() {
     }
   }
 
+  const fetchAuditHistory = async () => {
+    setIsLoadingAuditHistory(true)
+    try {
+      const response = await fetch('/api/seo/audit')
+      if (response.ok) {
+        const data = await response.json()
+        setAuditHistory(data.audits || [])
+      } else {
+        console.error('Error fetching audit history')
+      }
+    } catch (error) {
+      console.error('Error fetching audit history:', error)
+    } finally {
+      setIsLoadingAuditHistory(false)
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'seo') {
       fetchWebsites()
     } else if (activeTab === 'audit') {
       fetchWebsites()
+      fetchAuditHistory()
     } else if (activeTab === 'recommendations') {
       fetchRecommendations()
     }
@@ -871,14 +894,70 @@ export default function ResearchHub() {
 
             {/* Audit History */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Audits</h2>
-              <div className="space-y-4">
-                {websites.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No websites added yet. Add a website to start auditing.</p>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">Click "Run SEO Audit" on any website to see audit history.</p>
-                )}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Recent Audits</h2>
+                <button 
+                  onClick={fetchAuditHistory}
+                  disabled={isLoadingAuditHistory}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
               </div>
+              
+              {isLoadingAuditHistory ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading audit history...</p>
+                </div>
+              ) : auditHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No audit history found</p>
+                  <p className="text-sm text-gray-400">Run an SEO audit on a website to see audit history</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {auditHistory.map((audit: any) => (
+                    <div key={audit.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 mb-2">{audit.title || 'Website Audit'}</h3>
+                          <p className="text-sm text-gray-600 mb-2">{audit.url}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>Score: {audit.seoScore}/100</span>
+                            <span>Scanned: {new Date(audit.scannedAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            audit.seoScore >= 80 ? 'bg-green-100 text-green-800' :
+                            audit.seoScore >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {audit.seoScore >= 80 ? 'Good' : audit.seoScore >= 60 ? 'Fair' : 'Poor'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {audit.issues && (
+                        <div className="mt-3">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Issues Found:</h4>
+                          <div className="text-xs text-gray-600">
+                            {typeof audit.issues === 'string' ? 
+                              JSON.parse(audit.issues).technical?.length || 0 + 
+                              JSON.parse(audit.issues).content?.length || 0 + 
+                              JSON.parse(audit.issues).performance?.length || 0 + 
+                              JSON.parse(audit.issues).mobile?.length || 0 : 0} total issues
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
