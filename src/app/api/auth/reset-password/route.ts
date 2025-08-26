@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 const resetPasswordSchema = z.object({
   email: z.string().email(),
-  newPassword: z.string().min(6)
+  newPassword: z.string().min(6, "Password must be at least 6 characters long")
 })
 
 // Simple password hashing function (for development only)
@@ -53,6 +53,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Reset password error:', error)
+    
+    // Handle Zod validation errors
+    if (error.name === 'ZodError') {
+      const validationErrors = error.errors.map((err: any) => err.message).join(', ')
+      return NextResponse.json(
+        { error: `Validation error: ${validationErrors}` }, 
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
       { error: `Failed to reset password: ${error.message}` }, 
       { status: 500 }
