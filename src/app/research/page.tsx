@@ -931,6 +931,16 @@ export default function ResearchHub() {
                     Test Fetch
                   </button>
                   <button 
+                    onClick={async () => {
+                      console.log('Testing SEO API...')
+                      const data = await api.test.seo()
+                      console.log('SEO Test result:', data)
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Test SEO
+                  </button>
+                  <button 
                     onClick={fetchRecommendations}
                     disabled={isLoadingRecommendations}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"

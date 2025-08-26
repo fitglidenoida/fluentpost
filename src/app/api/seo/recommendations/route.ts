@@ -118,27 +118,33 @@ export async function GET(request: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
 
-    // Get recommendations with website info
+    // Get recommendations (without relying on Prisma relation includes)
     const recommendations = await prisma.seORecommendation.findMany({
       where,
-      include: {
-        website: {
-          select: {
-            id: true,
-            name: true,
-            url: true
-          }
-        }
-      },
       orderBy: [
         { priority: 'desc' },
         { createdAt: 'desc' }
       ]
     })
 
+    // Attach website info via a separate query
+    const websiteIds = Array.from(new Set(recommendations.map((r: any) => r.websiteId)))
+    const websites = websiteIds.length
+      ? await prisma.website.findMany({
+          where: { id: { in: websiteIds } },
+          select: { id: true, name: true, url: true }
+        })
+      : []
+    const websiteById = new Map(websites.map((w: any) => [w.id, w]))
+
+    const recommendationsWithWebsite = recommendations.map((r: any) => ({
+      ...r,
+      website: websiteById.get(r.websiteId) || null,
+    }))
+
     return NextResponse.json({ 
       success: true, 
-      recommendations 
+      recommendations: recommendationsWithWebsite,
     })
 
   } catch (error) {

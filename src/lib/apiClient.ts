@@ -47,7 +47,9 @@ apiClient.interceptors.response.use(
     console.error('API Response Error:', {
       status: error.response?.status,
       message: error.response?.data?.error || error.message,
-      url: error.config?.url
+      details: error.response?.data?.details,
+      url: error.config?.url,
+      fullError: error.response?.data
     })
     return Promise.reject(error)
   }
@@ -140,6 +142,10 @@ export const api = {
   test: {
     fetch: async () => {
       const response = await apiClient.get('/api/test-fetch')
+      return response.data
+    },
+    seo: async () => {
+      const response = await apiClient.get('/api/test-seo')
       return response.data
     }
   }
