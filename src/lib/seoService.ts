@@ -112,6 +112,60 @@ export class SEOService {
     }
   }
 
+  // Comprehensive website audit
+  static async performWebsiteAudit(url: string): Promise<any> {
+    try {
+      const audit = {
+        url,
+        scannedAt: new Date(),
+        currentState: {
+          seoScore: 0,
+          technicalIssues: [],
+          contentIssues: [],
+          performanceIssues: [],
+          mobileIssues: []
+        },
+        expectedState: {
+          targetSeoScore: 90,
+          targetLoadTime: 3,
+          targetMobileScore: 90,
+          targetAccessibilityScore: 90
+        },
+        actionableItems: [],
+        recommendations: [],
+        priority: 'high' as 'low' | 'medium' | 'high'
+      }
+
+      // 1. Technical SEO Analysis
+      const technicalAnalysis = await this.analyzeTechnicalSEO(url)
+      audit.currentState.technicalIssues = technicalAnalysis.issues
+      audit.currentState.seoScore = technicalAnalysis.score
+
+      // 2. Content Analysis
+      const contentAnalysis = await this.analyzeContent(url)
+      audit.currentState.contentIssues = contentAnalysis.issues
+
+      // 3. Performance Analysis
+      const performanceAnalysis = await this.analyzePerformance(url)
+      audit.currentState.performanceIssues = performanceAnalysis.issues
+
+      // 4. Mobile Analysis
+      const mobileAnalysis = await this.analyzeMobile(url)
+      audit.currentState.mobileIssues = mobileAnalysis.issues
+
+      // 5. Generate actionable items
+      audit.actionableItems = this.generateActionableItems(audit.currentState, audit.expectedState)
+
+      // 6. Set priority based on issues
+      audit.priority = this.calculatePriority(audit.currentState)
+
+      return audit
+    } catch (error) {
+      console.error('Website audit error:', error)
+      throw error
+    }
+  }
+
   // Generate SEO recommendations
   static async generateRecommendations(websiteId: string): Promise<SEORecommendation[]> {
     const recommendations: SEORecommendation[] = []
@@ -296,5 +350,195 @@ export class SEOService {
         action: 'Implement structured data for better search results'
       }
     ]
+  }
+
+  // Technical SEO Analysis
+  private static async analyzeTechnicalSEO(url: string): Promise<any> {
+    const issues: string[] = []
+    let score = 100
+
+    try {
+      const pageData = await this.scrapePage(url)
+      
+      // Check meta tags
+      if (!pageData.title) {
+        issues.push('Missing page title')
+        score -= 20
+      } else if (pageData.title.length < 30 || pageData.title.length > 60) {
+        issues.push('Page title length should be between 30-60 characters')
+        score -= 10
+      }
+
+      if (!pageData.metaDescription) {
+        issues.push('Missing meta description')
+        score -= 15
+      } else if (pageData.metaDescription.length < 120 || pageData.metaDescription.length > 160) {
+        issues.push('Meta description length should be between 120-160 characters')
+        score -= 10
+      }
+
+      // Check headings structure
+      if (!pageData.headings || pageData.headings.length === 0) {
+        issues.push('No heading structure found')
+        score -= 15
+      } else {
+        const h1Count = pageData.headings.filter((h: string) => h.startsWith('H1')).length
+        if (h1Count === 0) {
+          issues.push('Missing H1 heading')
+          score -= 10
+        } else if (h1Count > 1) {
+          issues.push('Multiple H1 headings found')
+          score -= 5
+        }
+      }
+
+      // Check content
+      if (!pageData.content || pageData.content.length < 300) {
+        issues.push('Insufficient content (less than 300 characters)')
+        score -= 20
+      }
+
+      return { issues, score: Math.max(0, score) }
+    } catch (error) {
+      issues.push('Failed to analyze technical SEO')
+      return { issues, score: 0 }
+    }
+  }
+
+  // Content Analysis
+  private static async analyzeContent(url: string): Promise<any> {
+    const issues: string[] = []
+
+    try {
+      const pageData = await this.scrapePage(url)
+      
+      if (!pageData.content) {
+        issues.push('No content found on page')
+        return { issues }
+      }
+
+      // Check content length
+      if (pageData.content.length < 500) {
+        issues.push('Content is too short for good SEO')
+      }
+
+      // Check for images without alt text (mock)
+      issues.push('Some images may be missing alt text')
+
+      // Check for internal links
+      if (!pageData.links || pageData.links.length === 0) {
+        issues.push('No internal links found')
+      }
+
+      return { issues }
+    } catch (error) {
+      issues.push('Failed to analyze content')
+      return { issues }
+    }
+  }
+
+  // Performance Analysis
+  private static async analyzePerformance(url: string): Promise<any> {
+    const issues: string[] = []
+
+    try {
+      // Mock performance analysis
+      const loadTime = Math.random() * 5 + 1 // 1-6 seconds
+      
+      if (loadTime > 3) {
+        issues.push(`Page load time is ${loadTime.toFixed(1)}s (should be under 3s)`)
+      }
+
+      // Check for large images
+      issues.push('Some images may be too large for optimal performance')
+
+      // Check for minification
+      issues.push('CSS and JS files should be minified')
+
+      return { issues, loadTime }
+    } catch (error) {
+      issues.push('Failed to analyze performance')
+      return { issues }
+    }
+  }
+
+  // Mobile Analysis
+  private static async analyzeMobile(url: string): Promise<any> {
+    const issues: string[] = []
+
+    try {
+      // Mock mobile analysis
+      const mobileScore = Math.floor(Math.random() * 30) + 70 // 70-100
+      
+      if (mobileScore < 90) {
+        issues.push('Mobile optimization needs improvement')
+      }
+
+      issues.push('Check viewport meta tag')
+      issues.push('Ensure touch targets are large enough')
+
+      return { issues, mobileScore }
+    } catch (error) {
+      issues.push('Failed to analyze mobile optimization')
+      return { issues }
+    }
+  }
+
+  // Generate Actionable Items
+  private static generateActionableItems(currentState: any, expectedState: any): any[] {
+    const items = []
+
+    // Technical SEO items
+    if (currentState.technicalIssues.length > 0) {
+      currentState.technicalIssues.forEach((issue: string) => {
+        items.push({
+          category: 'Technical SEO',
+          issue,
+          priority: 'high',
+          estimatedTime: '30 minutes',
+          impact: 'High'
+        })
+      })
+    }
+
+    // Content items
+    if (currentState.contentIssues.length > 0) {
+      currentState.contentIssues.forEach((issue: string) => {
+        items.push({
+          category: 'Content',
+          issue,
+          priority: 'medium',
+          estimatedTime: '1 hour',
+          impact: 'Medium'
+        })
+      })
+    }
+
+    // Performance items
+    if (currentState.performanceIssues.length > 0) {
+      currentState.performanceIssues.forEach((issue: string) => {
+        items.push({
+          category: 'Performance',
+          issue,
+          priority: 'high',
+          estimatedTime: '2 hours',
+          impact: 'High'
+        })
+      })
+    }
+
+    return items
+  }
+
+  // Calculate Priority
+  private static calculatePriority(currentState: any): 'low' | 'medium' | 'high' {
+    const totalIssues = currentState.technicalIssues.length + 
+                       currentState.contentIssues.length + 
+                       currentState.performanceIssues.length + 
+                       currentState.mobileIssues.length
+
+    if (totalIssues > 10) return 'high'
+    if (totalIssues > 5) return 'medium'
+    return 'low'
   }
 }

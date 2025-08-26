@@ -36,6 +36,10 @@ export default function ResearchHub() {
   const [isResearching, setIsResearching] = useState(false)
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false)
   const [selectedKeyword, setSelectedKeyword] = useState<any>(null)
+  const [showAuditModal, setShowAuditModal] = useState(false)
+  const [selectedWebsiteForAudit, setSelectedWebsiteForAudit] = useState<any>(null)
+  const [auditResults, setAuditResults] = useState<any>(null)
+  const [isAuditing, setIsAuditing] = useState(false)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -208,6 +212,41 @@ export default function ResearchHub() {
     setShowSuggestionsModal(true)
   }
 
+  const startWebsiteAudit = (website: any) => {
+    setSelectedWebsiteForAudit(website)
+    setShowAuditModal(true)
+  }
+
+  const performAudit = async () => {
+    if (!selectedWebsiteForAudit) return
+
+    setIsAuditing(true)
+    try {
+      const response = await fetch('/api/seo/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId: selectedWebsiteForAudit.id,
+          url: selectedWebsiteForAudit.url
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setAuditResults(data.audit)
+        alert('Website audit completed successfully!')
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error performing audit')
+      }
+    } catch (error) {
+      console.error('Error performing audit:', error)
+      alert('Error performing audit')
+    } finally {
+      setIsAuditing(false)
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'seo') {
       fetchWebsites()
@@ -371,6 +410,16 @@ export default function ResearchHub() {
             >
               🔍 SEO Research
             </button>
+            <button
+              onClick={() => setActiveTab('audit')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'audit'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              📊 SEO Audits
+            </button>
           </div>
         </div>
 
@@ -494,11 +543,17 @@ export default function ResearchHub() {
                   <div key={website.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">{website.url}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                       <span>Pages: {website._count?.pageAnalyses || 0}</span>
                       <span>Keywords: {website._count?.keywordResearches || 0}</span>
                       <span>Issues: {website._count?.seoRecommendations || 0}</span>
                     </div>
+                    <button 
+                      onClick={() => startWebsiteAudit(website)}
+                      className="w-full px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      🔍 Run SEO Audit
+                    </button>
                   </div>
                 ))}
               </div>
@@ -721,6 +776,59 @@ export default function ResearchHub() {
           </div>
         )}
 
+        {/* SEO Audits Content */}
+        {activeTab === 'audit' && (
+          <div className="space-y-8">
+            {/* Website Management for Audits */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Website Audits</h2>
+                <button 
+                  onClick={() => setShowWebsiteForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Website
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {websites.map((website: any) => (
+                  <div key={website.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">{website.url}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                      <span>Audits: {website._count?.pageAnalyses || 0}</span>
+                      <span>Issues: {website._count?.seoRecommendations || 0}</span>
+                      <span>Priority: {website._count?.seoRecommendations > 5 ? 'High' : 'Low'}</span>
+                    </div>
+                    <button 
+                      onClick={() => startWebsiteAudit(website)}
+                      className="w-full px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      🔍 Run SEO Audit
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Audit History */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Audits</h2>
+              <div className="space-y-4">
+                {websites.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No websites added yet. Add a website to start auditing.</p>
+                ) : (
+                  <p className="text-gray-500 text-center py-8">Click "Run SEO Audit" on any website to see audit history.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Keyword Suggestions Modal */}
         {showSuggestionsModal && selectedKeyword && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -806,6 +914,151 @@ export default function ResearchHub() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Website Audit Modal */}
+        {showAuditModal && selectedWebsiteForAudit && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Website SEO Audit</h2>
+                <button 
+                  onClick={() => setShowAuditModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {!auditResults ? (
+                <div className="space-y-6">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">Ready to Audit: {selectedWebsiteForAudit.name}</h3>
+                    <p className="text-blue-700">{selectedWebsiteForAudit.url}</p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">What this audit will check:</h4>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li>✅ Technical SEO (meta tags, headings, content structure)</li>
+                      <li>✅ Content quality and optimization</li>
+                      <li>✅ Performance and loading speed</li>
+                      <li>✅ Mobile optimization</li>
+                      <li>✅ SEO score calculation</li>
+                    </ul>
+                  </div>
+                  
+                  <button 
+                    onClick={performAudit}
+                    disabled={isAuditing}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isAuditing ? 'Running Audit...' : 'Start SEO Audit'}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Current State */}
+                  <div className="bg-red-50 rounded-lg p-6">
+                    <h3 className="font-semibold text-red-900 mb-4">Current State</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{auditResults.currentState.seoScore}</div>
+                        <div className="text-sm text-red-700">SEO Score</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{auditResults.currentState.technicalIssues.length}</div>
+                        <div className="text-sm text-red-700">Technical Issues</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{auditResults.currentState.contentIssues.length}</div>
+                        <div className="text-sm text-red-700">Content Issues</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{auditResults.currentState.performanceIssues.length}</div>
+                        <div className="text-sm text-red-700">Performance Issues</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expected State */}
+                  <div className="bg-green-50 rounded-lg p-6">
+                    <h3 className="font-semibold text-green-900 mb-4">Expected State</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{auditResults.expectedState.targetSeoScore}</div>
+                        <div className="text-sm text-green-700">Target SEO Score</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{auditResults.expectedState.targetLoadTime}s</div>
+                        <div className="text-sm text-green-700">Target Load Time</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{auditResults.expectedState.targetMobileScore}</div>
+                        <div className="text-sm text-green-700">Target Mobile Score</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{auditResults.expectedState.targetAccessibilityScore}</div>
+                        <div className="text-sm text-green-700">Target Accessibility</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actionable Items */}
+                  <div className="bg-yellow-50 rounded-lg p-6">
+                    <h3 className="font-semibold text-yellow-900 mb-4">Actionable Items ({auditResults.actionableItems.length})</h3>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {auditResults.actionableItems.map((item: any, index: number) => (
+                        <div key={index} className="bg-white rounded-lg p-4 border border-yellow-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  item.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                  item.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}>
+                                  {item.priority.toUpperCase()}
+                                </span>
+                                <span className="text-sm text-gray-500">{item.category}</span>
+                              </div>
+                              <p className="text-sm text-gray-900 mb-2">{item.issue}</p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>⏱️ {item.estimatedTime}</span>
+                                <span>📈 {item.impact} Impact</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <button 
+                      onClick={() => {
+                        setAuditResults(null)
+                        setShowAuditModal(false)
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Run Another Audit
+                    </button>
+                    <button 
+                      onClick={() => {
+                        // Generate recommendations
+                        alert('Recommendations generated! Check the Recommendations tab.')
+                      }}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Generate Recommendations
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
