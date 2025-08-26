@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // API Client Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.fluentpost.in' 
+  ? 'https://fluentpost.in' 
   : 'http://localhost:3002'
 
 // Create axios instance
