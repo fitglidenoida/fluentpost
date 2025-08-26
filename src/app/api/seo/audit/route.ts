@@ -133,13 +133,42 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')
 
-    if (!websiteId) {
-      return NextResponse.json({ error: 'Website ID required' }, { status: 400 })
+    // Build where clause - get all audits for user's websites
+    const where: any = {}
+    
+    if (websiteId) {
+      // If specific website requested, verify ownership
+      const website = await prisma.website.findFirst({
+        where: { 
+          id: websiteId,
+          userId: session.user.id 
+        }
+      })
+      if (!website) {
+        return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+      }
+      where.websiteId = websiteId
+    } else {
+      // Get all audits for user's websites
+      const userWebsites = await prisma.website.findMany({
+        where: { userId: session.user.id },
+        select: { id: true }
+      })
+      where.websiteId = { in: userWebsites.map(w => w.id) }
     }
 
-    // Get audit history for website
+    // Get audit history with website info
     const audits = await prisma.pageAnalysis.findMany({
-      where: { websiteId },
+      where,
+      include: {
+        website: {
+          select: {
+            id: true,
+            name: true,
+            url: true
+          }
+        }
+      },
       orderBy: { scannedAt: 'desc' }
     })
 

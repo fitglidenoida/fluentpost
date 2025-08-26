@@ -81,18 +81,45 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
 
-    if (!websiteId) {
-      return NextResponse.json({ error: 'Website ID required' }, { status: 400 })
+    // Build where clause - get all recommendations for user's websites
+    const where: any = {}
+    
+    if (websiteId) {
+      // If specific website requested, verify ownership
+      const website = await prisma.website.findFirst({
+        where: { 
+          id: websiteId,
+          userId: session.user.id 
+        }
+      })
+      if (!website) {
+        return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+      }
+      where.websiteId = websiteId
+    } else {
+      // Get all recommendations for user's websites
+      const userWebsites = await prisma.website.findMany({
+        where: { userId: session.user.id },
+        select: { id: true }
+      })
+      where.websiteId = { in: userWebsites.map(w => w.id) }
     }
 
-    // Build where clause
-    const where: any = { websiteId }
     if (status) where.status = status
     if (priority) where.priority = priority
 
-    // Get recommendations
+    // Get recommendations with website info
     const recommendations = await prisma.seORecommendation.findMany({
       where,
+      include: {
+        website: {
+          select: {
+            id: true,
+            name: true,
+            url: true
+          }
+        }
+      },
       orderBy: [
         { priority: 'desc' },
         { createdAt: 'desc' }
