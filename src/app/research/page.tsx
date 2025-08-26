@@ -40,6 +40,8 @@ export default function ResearchHub() {
   const [selectedWebsiteForAudit, setSelectedWebsiteForAudit] = useState<any>(null)
   const [auditResults, setAuditResults] = useState<any>(null)
   const [isAuditing, setIsAuditing] = useState(false)
+  const [recommendations, setRecommendations] = useState([])
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -247,9 +249,45 @@ export default function ResearchHub() {
     }
   }
 
+  const fetchRecommendations = async () => {
+    setIsLoadingRecommendations(true)
+    try {
+      const response = await fetch('/api/seo/recommendations')
+      if (response.ok) {
+        const data = await response.json()
+        setRecommendations(data.recommendations || [])
+      } else {
+        console.error('Error fetching recommendations')
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error)
+    } finally {
+      setIsLoadingRecommendations(false)
+    }
+  }
+
+  const updateRecommendationStatus = async (recommendationId: string, status: string) => {
+    try {
+      const response = await fetch('/api/seo/recommendations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recommendationId, status })
+      })
+      
+      if (response.ok) {
+        // Refresh recommendations
+        fetchRecommendations()
+      }
+    } catch (error) {
+      console.error('Error updating recommendation:', error)
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'seo') {
       fetchWebsites()
+    } else if (activeTab === 'recommendations') {
+      fetchRecommendations()
     }
   }, [activeTab])
 
@@ -419,6 +457,16 @@ export default function ResearchHub() {
               }`}
             >
               📊 SEO Audits
+            </button>
+            <button
+              onClick={() => setActiveTab('recommendations')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'recommendations'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              💡 Recommendations
             </button>
           </div>
         </div>
@@ -826,6 +874,113 @@ export default function ResearchHub() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Recommendations Content */}
+        {activeTab === 'recommendations' && (
+          <div className="space-y-8">
+            {/* Recommendations Header */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">SEO Recommendations</h2>
+                <button 
+                  onClick={fetchRecommendations}
+                  disabled={isLoadingRecommendations}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+              
+              {isLoadingRecommendations ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading recommendations...</p>
+                </div>
+              ) : recommendations.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No recommendations found</p>
+                  <p className="text-sm text-gray-400">Run an SEO audit on a website to generate recommendations</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recommendations.map((rec: any) => (
+                    <div key={rec.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              rec.priority === 'high' ? 'bg-red-100 text-red-800' :
+                              rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              rec.priority === 'critical' ? 'bg-red-200 text-red-900' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {rec.priority.toUpperCase()}
+                            </span>
+                            <span className="text-sm text-gray-500 capitalize">{rec.type.replace('_', ' ')}</span>
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2">{rec.description}</h3>
+                          {rec.action && (
+                            <p className="text-sm text-gray-600 mb-3">{rec.action}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select 
+                            value={rec.status}
+                            onChange={(e) => updateRecommendationStatus(rec.id, e.target.value)}
+                            className="text-xs border border-gray-300 rounded px-2 py-1"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="implemented">Implemented</option>
+                            <option value="ignored">Ignored</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>Created: {new Date(rec.createdAt).toLocaleDateString()}</span>
+                        <span>Website: {rec.website?.name || 'Unknown'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recommendations Summary */}
+            {recommendations.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Summary</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{recommendations.length}</div>
+                    <div className="text-sm text-gray-600">Total</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {recommendations.filter((r: any) => r.priority === 'high' || r.priority === 'critical').length}
+                    </div>
+                    <div className="text-sm text-gray-600">High Priority</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {recommendations.filter((r: any) => r.status === 'implemented').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Implemented</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {recommendations.filter((r: any) => r.status === 'pending').length}
+                    </div>
+                    <div className="text-sm text-gray-600">Pending</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
