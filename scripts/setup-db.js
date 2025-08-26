@@ -1,8 +1,8 @@
 // Set environment variables
 process.env.DATABASE_URL = "file:./dev.db"
-process.env.NEXTAUTH_URL = "https://fluentpost.in"
+process.env.NEXTAUTH_URL = process.env.NODE_ENV === 'production' ? "https://fluentpost.in" : "http://localhost:3001"
 process.env.NEXTAUTH_SECRET = "fitglide-marketing-dev-secret-key-2024"
-process.env.NODE_ENV = "production"
+process.env.NODE_ENV = process.env.NODE_ENV || "development"
 
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')

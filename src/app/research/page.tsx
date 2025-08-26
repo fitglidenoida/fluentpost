@@ -257,12 +257,18 @@ export default function ResearchHub() {
   const fetchRecommendations = async () => {
     setIsLoadingRecommendations(true)
     try {
+      console.log('Fetching recommendations from:', '/api/seo/recommendations')
       const response = await fetch('/api/seo/recommendations')
+      console.log('Response status:', response.status)
+      console.log('Response URL:', response.url)
+      
       if (response.ok) {
         const data = await response.json()
         setRecommendations(data.recommendations || [])
       } else {
-        console.error('Error fetching recommendations')
+        console.error('Error fetching recommendations:', response.status, response.statusText)
+        const errorData = await response.text()
+        console.error('Error data:', errorData)
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error)
