@@ -57,6 +57,8 @@ model User {
   analytics Analytics[]
   aiResponses AIResponse[]
   securityAudits SecurityAudit[]
+  websites      Website[]
+  seoActions    SEOActions[]
 }
 
 model VerificationToken {
@@ -224,4 +226,92 @@ model SecurityAudit {
   timestamp   DateTime @default(now())
   
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model SEOActions {
+  id        String   @id @default(cuid())
+  websiteId String
+  website   Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  action    String   // "meta_update", "content_optimize", "schema_add", etc.
+  status    String   @default("pending") // "pending", "completed", "failed"
+  result    String?  // JSON result of the action
+  timestamp DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+  @@index([userId])
+}
+
+model Website {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String   @default("active") // "active", "inactive", "scanning"
+  lastScanned DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  pageAnalyses       PageAnalysis[]
+  keywordResearches  KeywordResearch[]
+  seoRecommendations SEORecommendation[]
+  seoActions         SEOActions[]
+
+  @@index([userId])
+  @@unique([url, userId])
+}
+
+model PageAnalysis {
+  id             String   @id @default(cuid())
+  websiteId      String
+  website        Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  url            String
+  title          String?
+  metaDescription String?
+  headings       String?  // JSON array of headings
+  content        String?  // Main content text
+  seoScore       Int?     // 0-100 SEO score
+  issues         String?  // JSON array of SEO issues
+  suggestions    String?  // JSON array of suggestions
+  scannedAt      DateTime @default(now())
+
+  @@index([websiteId])
+  @@unique([websiteId, url])
+}
+
+model KeywordResearch {
+  id          String   @id @default(cuid())
+  websiteId   String
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  keyword     String
+  searchVolume Int?    // Monthly search volume
+  difficulty  Int?     // 0-100 difficulty score
+  ranking     Int?     // Current ranking position
+  suggestions String?  // JSON array of related keywords
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([websiteId])
+  @@index([keyword])
+}
+
+model SEORecommendation {
+  id          String   @id @default(cuid())
+  websiteId   String
+  website     Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  pageId      String?  // Optional, for page-specific recommendations
+  type        String   // "meta", "content", "technical", "schema"
+  priority    String   @default("medium") // "low", "medium", "high", "critical"
+  description String
+  action      String?  // Suggested action to take
+  status      String   @default("pending") // "pending", "implemented", "ignored"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([websiteId])
+  @@index([type])
+  @@index([priority])
 }

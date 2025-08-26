@@ -18,6 +18,22 @@ export default function ResearchHub() {
     keywords: '',
     difficulty: 'medium'
   })
+  
+  // SEO State
+  const [activeTab, setActiveTab] = useState('topics') // 'topics' or 'seo'
+  const [websites, setWebsites] = useState([])
+  const [selectedWebsite, setSelectedWebsite] = useState(null)
+  const [showWebsiteForm, setShowWebsiteForm] = useState(false)
+  const [newWebsite, setNewWebsite] = useState({
+    name: '',
+    url: ''
+  })
+  const [keywordResearch, setKeywordResearch] = useState({
+    domain: '',
+    seedKeywords: [''],
+    keywords: []
+  })
+  const [isResearching, setIsResearching] = useState(false)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -93,6 +109,103 @@ export default function ResearchHub() {
   })
 
   const categories = ['all', 'fitness', 'nutrition', 'wellness', 'workouts', 'lifestyle']
+
+  // SEO Functions
+  const fetchWebsites = async () => {
+    try {
+      const response = await fetch('/api/websites')
+      if (response.ok) {
+        const data = await response.json()
+        setWebsites(data.websites || [])
+      }
+    } catch (error) {
+      console.error('Error fetching websites:', error)
+    }
+  }
+
+  const createWebsite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('/api/websites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWebsite)
+      })
+      
+      if (response.ok) {
+        setShowWebsiteForm(false)
+        setNewWebsite({ name: '', url: '' })
+        fetchWebsites()
+        alert('Website added successfully!')
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error adding website')
+      }
+    } catch (error) {
+      console.error('Error creating website:', error)
+      alert('Error creating website')
+    }
+  }
+
+  const researchKeywords = async () => {
+    if (!keywordResearch.domain || keywordResearch.seedKeywords.length === 0) {
+      alert('Please enter domain and at least one seed keyword')
+      return
+    }
+
+    setIsResearching(true)
+    try {
+      const response = await fetch('/api/seo/keywords', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          domain: keywordResearch.domain,
+          seedKeywords: keywordResearch.seedKeywords.filter(k => k.trim())
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setKeywordResearch(prev => ({ ...prev, keywords: data.keywords }))
+        alert(`Found ${data.total} keywords!`)
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Error researching keywords')
+      }
+    } catch (error) {
+      console.error('Error researching keywords:', error)
+      alert('Error researching keywords')
+    } finally {
+      setIsResearching(false)
+    }
+  }
+
+  const addSeedKeyword = () => {
+    setKeywordResearch(prev => ({
+      ...prev,
+      seedKeywords: [...prev.seedKeywords, '']
+    }))
+  }
+
+  const removeSeedKeyword = (index: number) => {
+    setKeywordResearch(prev => ({
+      ...prev,
+      seedKeywords: prev.seedKeywords.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateSeedKeyword = (index: number, value: string) => {
+    setKeywordResearch(prev => ({
+      ...prev,
+      seedKeywords: prev.seedKeywords.map((keyword, i) => i === index ? value : keyword)
+    }))
+  }
+
+  useEffect(() => {
+    if (activeTab === 'seo') {
+      fetchWebsites()
+    }
+  }, [activeTab])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -228,6 +341,32 @@ export default function ResearchHub() {
           </div>
         </div>
 
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex space-x-8 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('topics')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'topics'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              📚 Content Topics
+            </button>
+            <button
+              onClick={() => setActiveTab('seo')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'seo'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              🔍 SEO Research
+            </button>
+          </div>
+        </div>
+
         {/* Search and Filters */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -325,6 +464,120 @@ export default function ResearchHub() {
           )}
         </div>
 
+        {/* SEO Content */}
+        {activeTab === 'seo' && (
+          <div className="space-y-8">
+            {/* Website Management */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Website Management</h2>
+                <button 
+                  onClick={() => setShowWebsiteForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Website
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {websites.map((website: any) => (
+                  <div key={website.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">{website.url}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Pages: {website._count?.pageAnalyses || 0}</span>
+                      <span>Keywords: {website._count?.keywordResearches || 0}</span>
+                      <span>Issues: {website._count?.seoRecommendations || 0}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Keyword Research */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Keyword Research</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Research Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Domain</label>
+                    <input 
+                      type="url"
+                      value={keywordResearch.domain}
+                      onChange={(e) => setKeywordResearch(prev => ({ ...prev, domain: e.target.value }))}
+                      placeholder="https://example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Seed Keywords</label>
+                    {keywordResearch.seedKeywords.map((keyword, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input 
+                          type="text"
+                          value={keyword}
+                          onChange={(e) => updateSeedKeyword(index, e.target.value)}
+                          placeholder="Enter seed keyword"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <button 
+                          onClick={() => removeSeedKeyword(index)}
+                          className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button 
+                      onClick={addSeedKeyword}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      + Add another keyword
+                    </button>
+                  </div>
+                  
+                  <button 
+                    onClick={researchKeywords}
+                    disabled={isResearching}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isResearching ? 'Researching...' : 'Research Keywords'}
+                  </button>
+                </div>
+
+                {/* Results */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-4">Research Results</h3>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {keywordResearch.keywords.map((keyword: any, index: number) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-gray-900">{keyword.keyword}</span>
+                          <span className="text-sm text-gray-500">Difficulty: {keyword.difficulty || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Volume: {keyword.searchVolume || 'N/A'}</span>
+                          {keyword.suggestions && (
+                            <span className="text-blue-600 cursor-pointer hover:underline">
+                              View suggestions
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Add Topic Modal */}
         {showTopicForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -398,6 +651,56 @@ export default function ResearchHub() {
                   <button 
                     type="button"
                     onClick={() => setShowTopicForm(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add Website Modal */}
+        {showWebsiteForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Add New Website</h2>
+              <form onSubmit={createWebsite}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Website Name</label>
+                    <input 
+                      type="text"
+                      value={newWebsite.name}
+                      onChange={(e) => setNewWebsite({...newWebsite, name: e.target.value})}
+                      required
+                      placeholder="My Business Website"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
+                    <input 
+                      type="url"
+                      value={newWebsite.url}
+                      onChange={(e) => setNewWebsite({...newWebsite, url: e.target.value})}
+                      required
+                      placeholder="https://example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4 mt-6">
+                  <button 
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add Website
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setShowWebsiteForm(false)}
                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
