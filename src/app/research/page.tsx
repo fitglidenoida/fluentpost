@@ -125,8 +125,14 @@ export default function ResearchHub() {
   // SEO Functions
   const fetchWebsites = async () => {
     try {
-      const data = await api.websites.getAll()
-      setWebsites(data.websites || [])
+      const response = await api.websites.getAll()
+      console.log('Fetch websites - Full response:', response)
+      console.log('Fetch websites - Response data:', response.data)
+      console.log('Fetch websites - Websites array:', response.data?.websites)
+      
+      const websites = response.data?.websites || []
+      console.log('Fetch websites - Setting websites:', websites)
+      setWebsites(websites)
     } catch (error) {
       console.error('Error fetching websites:', error)
     }
@@ -586,14 +592,14 @@ export default function ResearchHub() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {websites.map((website: any) => (
+                {console.log('Website Management - Websites to render:', websites) || websites.map((website: any) => (
                   <div key={website.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">{website.url}</p>
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                      <span>Pages: {website._count?.pageAnalyses || 0}</span>
-                      <span>Keywords: {website._count?.keywordResearches || 0}</span>
-                      <span>Issues: {website._count?.seoRecommendations || 0}</span>
+                      <span>Pages: 0</span>
+                      <span>Keywords: 0</span>
+                      <span>Issues: 0</span>
                     </div>
                     <button 
                       onClick={() => startWebsiteAudit(website)}
