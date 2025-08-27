@@ -22,9 +22,10 @@ export async function POST(request: NextRequest) {
     console.log('Looking for user with email:', email)
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
-    })
+    const user = db.queryFirst(
+      'SELECT * FROM User WHERE email = ?',
+      [email]
+    )
 
     if (!user) {
       console.log('User not found for email:', email)
@@ -39,10 +40,10 @@ export async function POST(request: NextRequest) {
     const hashedPassword = simpleHash(newPassword)
 
     // Update user's password
-    const updatedUser = await prisma.user.update({
-      where: { email },
-      data: { password: hashedPassword }
-    })
+    db.execute(
+      'UPDATE User SET password = ?, updatedAt = datetime(\'now\') WHERE email = ?',
+      [hashedPassword, email]
+    )
 
     console.log('Password reset successful for user:', email)
 

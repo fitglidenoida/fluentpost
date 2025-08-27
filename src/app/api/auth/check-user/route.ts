@@ -16,14 +16,10 @@ export async function POST(request: NextRequest) {
     console.log('Checking if user exists with email:', email)
 
     // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true
-      }
-    })
+    const user = db.queryFirst(
+      'SELECT id, email, name FROM User WHERE email = ?',
+      [email]
+    )
 
     if (!user) {
       console.log('User not found for email:', email)

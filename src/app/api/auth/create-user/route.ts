@@ -23,9 +23,10 @@ export async function POST(request: NextRequest) {
     console.log('Creating user with email:', email)
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const existingUser = db.queryFirst(
+      'SELECT * FROM User WHERE email = ?',
+      [email]
+    )
 
     if (existingUser) {
       console.log('User already exists:', email)
@@ -38,14 +39,13 @@ export async function POST(request: NextRequest) {
     const hashedPassword = simpleHash(password)
 
     // Create new user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: 'user'
-      }
-    })
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    db.execute(`
+      INSERT INTO User (id, name, email, password, role, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `, [userId, name, email, hashedPassword, 'user'])
+
+    const user = db.queryFirst('SELECT * FROM User WHERE id = ?', [userId])
 
     console.log('User created successfully:', email)
 
