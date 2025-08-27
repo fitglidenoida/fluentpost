@@ -210,10 +210,7 @@ export default function ResearchHub() {
 
     setIsAuditing(true)
     try {
-      const data = await api.seo.performAudit(
-        selectedWebsiteForAudit.id,
-        selectedWebsiteForAudit.url
-      )
+      const data = await api.seo.audit(selectedWebsiteForAudit.id)
       setAuditResults(data.audit)
       // Refresh audit history and recommendations
       fetchAuditHistory()

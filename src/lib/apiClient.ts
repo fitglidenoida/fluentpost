@@ -113,10 +113,15 @@ export const api = {
   },
   seo: {
     audit: (websiteId: string) => apiClient.post('/api/seo/audit', { websiteId }),
+    getAuditHistory: () => apiClient.get('/api/seo/audit'),
+    researchKeywords: (domain: string, keywords: string[]) => apiClient.post('/api/seo/keywords', { domain, keywords }),
     recommendations: {
       getAll: () => apiClient.get('/api/seo/recommendations'),
       generate: (websiteId: string) => apiClient.post('/api/seo/recommendations', { websiteId }),
     },
+    getRecommendations: () => apiClient.get('/api/seo/recommendations'),
+    updateRecommendation: (id: string, status: string) => apiClient.put('/api/seo/recommendations', { recommendationId: id, status }),
+    generateRecommendations: (data: any) => apiClient.post('/api/seo/recommendations', data),
     automate: (data: AutomationRequest) => apiClient.post('/api/seo/automate', data),
     testGitConnection: (gitConfig: any) => apiClient.post('/api/seo/test-git-connection', gitConfig),
   },
