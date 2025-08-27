@@ -64,11 +64,10 @@ export async function GET() {
   try {
     // For now, we'll get settings from the AppSettings table
     // In a real app, you'd get the user ID from the session
-    const settings = await prisma.appSettings.findFirst({
-      where: {
-        key: 'user_settings'
-      }
-    })
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
 
     if (!settings) {
       // Return default settings if none exist
@@ -152,19 +151,26 @@ export async function POST(request: NextRequest) {
 
     // For now, we'll save to AppSettings table
     // In a real app, you'd associate this with a specific user
-    const settings = await prisma.appSettings.upsert({
-      where: {
-        key: 'user_settings'
-      },
-      update: {
-        value: JSON.stringify(validatedData),
-        updatedAt: new Date()
-      },
-      create: {
-        key: 'user_settings',
-        value: JSON.stringify(validatedData)
-      }
-    })
+    // Manual upsert for AppSettings
+    const settingsId = `settings_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const existingSettings = db.queryFirst('SELECT id FROM AppSettings WHERE key = ?', ['user_settings'])
+    
+    if (existingSettings) {
+      db.execute(
+        'UPDATE AppSettings SET value = ?, updatedAt = datetime(\'now\') WHERE key = ?',
+        [JSON.stringify(validatedData), 'user_settings']
+      )
+    } else {
+      db.execute(
+        'INSERT INTO AppSettings (id, key, value, createdAt, updatedAt) VALUES (?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+        [settingsId, 'user_settings', JSON.stringify(validatedData)]
+      )
+    }
+
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
 
     return NextResponse.json({ 
       success: true, 

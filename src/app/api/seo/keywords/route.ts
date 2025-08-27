@@ -53,10 +53,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get keywords for a specific website
-    const keywords = await prisma.keywordResearch.findMany({
-      where: { websiteId },
-      orderBy: { createdAt: 'desc' }
-    })
+    const keywords = db.query(
+      'SELECT * FROM KeywordResearch WHERE websiteId = ? ORDER BY createdAt DESC',
+      [websiteId]
+    )
 
     return NextResponse.json({ 
       success: true, 

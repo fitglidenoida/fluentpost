@@ -21,50 +21,49 @@ export async function POST(request: NextRequest) {
     const { url, websiteName } = analyzeWebsiteSchema.parse(body)
 
     // Get or create website record
-    let website = await prisma.website.findFirst({
-      where: { 
-        url,
-        userId: session.user.id 
-      }
-    })
+    let website = db.queryFirst(
+      'SELECT * FROM Website WHERE url = ? AND userId = ?',
+      [url, session.user.id]
+    )
 
     if (!website) {
-      website = await prisma.website.create({
-        data: {
-          name: websiteName,
-          url,
-          userId: session.user.id,
-          status: 'scanning'
-        }
-      })
+      const websiteId = `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      db.execute(
+        'INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+        [websiteId, websiteName, url, session.user.id, 'scanning']
+      )
+      website = db.queryFirst('SELECT * FROM Website WHERE id = ?', [websiteId])
     }
 
     // Analyze the website
     const analysis = await SEOService.analyzeWebsite(url)
 
     // Save page analysis
-    const pageAnalysis = await prisma.pageAnalysis.create({
-      data: {
-        websiteId: website.id,
-        url: analysis.url,
-        title: analysis.title,
-        metaDescription: analysis.metaDescription,
-        headings: analysis.headings ? JSON.stringify(analysis.headings) : null,
-        content: analysis.content,
-        seoScore: analysis.seoScore,
-        issues: analysis.issues ? JSON.stringify(analysis.issues) : null,
-        suggestions: analysis.suggestions ? JSON.stringify(analysis.suggestions) : null
-      }
-    })
+    const pageAnalysisId = `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    db.execute(
+      `INSERT INTO PageAnalysis (id, websiteId, url, title, metaDescription, headings, content, seoScore, issues, suggestions, scannedAt) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      [
+        pageAnalysisId,
+        website.id,
+        analysis.url,
+        analysis.title,
+        analysis.metaDescription,
+        analysis.headings ? JSON.stringify(analysis.headings) : null,
+        analysis.content,
+        analysis.seoScore,
+        analysis.issues ? JSON.stringify(analysis.issues) : null,
+        analysis.suggestions ? JSON.stringify(analysis.suggestions) : null
+      ]
+    )
+
+    const pageAnalysis = db.queryFirst('SELECT * FROM PageAnalysis WHERE id = ?', [pageAnalysisId])
 
     // Update website status
-    await prisma.website.update({
-      where: { id: website.id },
-      data: { 
-        status: 'active',
-        lastScanned: new Date()
-      }
-    })
+    db.execute(
+      'UPDATE Website SET status = ?, lastScanned = datetime(\'now\'), updatedAt = datetime(\'now\') WHERE id = ?',
+      ['active', website.id]
+    )
 
     return NextResponse.json({ 
       success: true, 
@@ -99,17 +98,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get website with all analyses
-    const website = await prisma.website.findFirst({
-      where: { 
-        id: websiteId,
-        userId: session.user.id 
-      },
-      include: {
-        pageAnalyses: {
-          orderBy: { scannedAt: 'desc' }
-        }
-      }
-    })
+    const website = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ? AND userId = ?',
+      [websiteId, session.user.id]
+    )
+
+    if (website) {
+      const pageAnalyses = db.query(
+        'SELECT * FROM PageAnalysis WHERE websiteId = ? ORDER BY scannedAt DESC',
+        [websiteId]
+      )
+      website.pageAnalyses = pageAnalyses
+    }
 
     if (!website) {
       return NextResponse.json({ error: 'Website not found' }, { status: 404 })
