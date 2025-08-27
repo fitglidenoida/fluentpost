@@ -38,9 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Store the access token in database
-    const currentSettings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const currentSettings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
 
     let settings = currentSettings ? JSON.parse(currentSettings.value) : {
       notifications: { email: true, push: false, weeklyReports: true, viralAlerts: true },
@@ -65,12 +66,21 @@ export async function GET(request: NextRequest) {
       expiresAt: new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
     }
 
-    // Save to database
-    await prisma.appSettings.upsert({
-      where: { key: 'user_settings' },
-      update: { value: JSON.stringify(settings) },
-      create: { key: 'user_settings', value: JSON.stringify(settings) }
-    })
+    // Save to database (manual upsert)
+    const settingsId = `settings_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const existingSettings = db.queryFirst('SELECT id FROM AppSettings WHERE key = ?', ['user_settings'])
+    
+    if (existingSettings) {
+      db.execute(
+        'UPDATE AppSettings SET value = ?, updatedAt = datetime(\'now\') WHERE key = ?',
+        [JSON.stringify(settings), 'user_settings']
+      )
+    } else {
+      db.execute(
+        'INSERT INTO AppSettings (id, key, value, createdAt, updatedAt) VALUES (?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+        [settingsId, 'user_settings', JSON.stringify(settings)]
+      )
+    }
 
     return NextResponse.redirect(new URL('/settings?success=twitter_connected', request.url))
 

@@ -269,9 +269,11 @@ export class SocialMediaPostingService {
 
   // Helper methods to get credentials from database
   private async getFacebookAccessToken(): Promise<string | null> {
-    const settings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const db = (await import('@/lib/db')).default
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
     
     if (!settings) return null
     
@@ -280,9 +282,11 @@ export class SocialMediaPostingService {
   }
 
   private async getTwitterCredentials(): Promise<{ accessToken: string } | null> {
-    const settings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const db = (await import('@/lib/db')).default
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
     
     if (!settings) return null
     
@@ -306,9 +310,11 @@ export class SocialMediaPostingService {
   }
 
   private async getLinkedInAccessToken(): Promise<string | null> {
-    const settings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const db = (await import('@/lib/db')).default
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
     
     if (!settings) return null
     
@@ -317,9 +323,11 @@ export class SocialMediaPostingService {
   }
 
   private async getInstagramAccessToken(): Promise<string | null> {
-    const settings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const db = (await import('@/lib/db')).default
+    const settings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
     
     if (!settings) return null
     
