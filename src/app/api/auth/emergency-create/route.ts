@@ -25,9 +25,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email: defaultUser.email }
-    })
+    const existingUser = db.queryFirst(
+      'SELECT * FROM User WHERE email = ?',
+      [defaultUser.email]
+    )
 
     if (existingUser) {
       return NextResponse.json({ 
@@ -41,9 +42,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new admin user
-    const user = await prisma.user.create({
-      data: defaultUser
-    })
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    db.execute(`
+      INSERT INTO User (id, name, email, password, role, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `, [userId, defaultUser.name, defaultUser.email, defaultUser.password, defaultUser.role])
+
+    const user = db.queryFirst('SELECT * FROM User WHERE id = ?', [userId])
 
     console.log('Emergency admin user created successfully')
 

@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const existingUser = db.queryFirst(
+      'SELECT * FROM User WHERE email = ?',
+      [email]
+    )
 
     if (existingUser) {
       return NextResponse.json(
@@ -55,14 +56,13 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password)
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        name: nameValidation.data,
-        email: emailValidation.data,
-        password: hashedPassword,
-        role: role || 'user'
-      }
-    })
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    db.execute(`
+      INSERT INTO User (id, name, email, password, role, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `, [userId, nameValidation.data, emailValidation.data, hashedPassword, role || 'user'])
+
+    const user = db.queryFirst('SELECT * FROM User WHERE id = ?', [userId])
 
     // Log successful registration
     await SecurityAuditLogger.logRegistration(clientIP, userAgent, emailValidation.data, user.id)
