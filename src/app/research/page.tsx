@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { useAppStore } from '@/lib/store'
 import { CostFreeAIService } from '@/lib/ai'
 import { api } from '@/lib/apiClient'
-import AutomationPanel from '@/components/seo/AutomationPanel'
-import AutomationDashboard from '@/components/seo/AutomationDashboard'
+
 
 export default function ResearchHub() {
   const { content, isLoading, error, fetchTopics, createTopic } = useAppStore()
@@ -1091,13 +1090,17 @@ export default function ResearchHub() {
             </div>
 
             {selectedWebsiteForAudit ? (
-              <>
-                <AutomationPanel 
-                  recommendations={recommendations} 
-                  websiteId={selectedWebsiteForAudit.id} 
-                />
-                <AutomationDashboard websiteId={selectedWebsiteForAudit.id} />
-              </>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="text-center py-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Automation Features</h3>
+                  <p className="text-gray-500 mb-4">
+                    Automation features are currently being rebuilt with the new database system.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Website: {selectedWebsiteForAudit.name} ({selectedWebsiteForAudit.url})
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="text-center py-8">
