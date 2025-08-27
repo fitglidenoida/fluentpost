@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 // Simple password hashing function (for development only)
 function simpleHash(password: string): string {
@@ -36,7 +35,6 @@ declare module 'next-auth/jwt' {
 }
 
 export const authOptions: any = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -49,20 +47,11 @@ export const authOptions: any = {
           return null
         }
 
-        // Remove mock authentication - only allow real users
-        // if (process.env.MOCK_AI_RESPONSES === 'true') {
-        //   return {
-        //     id: 'mock-user-id',
-        //     email: credentials.email,
-        //     name: 'Sarah Johnson',
-        //     role: 'admin',
-        //   }
-        // }
-
-        // Real authentication
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+        // Real authentication using our database
+        const user = db.queryFirst(
+          'SELECT * FROM User WHERE email = ?',
+          [credentials.email]
+        ) as any
 
         if (!user || !user.password) {
           return null

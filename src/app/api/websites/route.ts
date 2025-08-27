@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]/route'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 import { z } from 'zod'
 
 const createWebsiteSchema = z.object({
@@ -17,7 +17,7 @@ const updateWebsiteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -26,12 +26,10 @@ export async function POST(request: NextRequest) {
     const { name, url } = createWebsiteSchema.parse(body)
 
     // Check if website already exists for this user
-    const existingWebsite = await prisma.website.findFirst({
-      where: { 
-        url,
-        userId: session.user.id 
-      }
-    })
+    const existingWebsite = db.queryFirst(
+      'SELECT id FROM Website WHERE url = ? AND userId = ?',
+      [url, session.user.id]
+    )
 
     if (existingWebsite) {
       return NextResponse.json(
@@ -40,15 +38,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate unique ID
+    const websiteId = `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const now = new Date().toISOString()
+
     // Create new website
-    const website = await prisma.website.create({
-      data: {
-        name,
-        url,
-        userId: session.user.id,
-        status: 'active'
-      }
-    })
+    db.execute(
+      `INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [websiteId, name, url, session.user.id, 'active', now, now]
+    )
+
+    // Fetch the created website
+    const website = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ?',
+      [websiteId]
+    )
 
     return NextResponse.json({ 
       success: true, 
@@ -66,7 +71,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -74,24 +79,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
 
-    // Build where clause
-    const where: any = { userId: session.user.id }
-    if (status) where.status = status
+    // Build SQL query with optional status filter
+    let query = 'SELECT * FROM Website WHERE userId = ?'
+    const params = [session.user.id]
+    
+    if (status) {
+      query += ' AND status = ?'
+      params.push(status)
+    }
+    
+    query += ' ORDER BY createdAt DESC'
 
-    // Get websites with basic stats
-    const websites = await prisma.website.findMany({
-      where,
-      include: {
-        _count: {
-          select: {
-            pageAnalyses: true,
-            keywordResearches: true,
-            seoRecommendations: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    // Get websites
+    const websites = db.query(query, params)
 
     return NextResponse.json({ 
       success: true, 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -118,22 +118,44 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = updateWebsiteSchema.parse(body)
 
     // Verify website ownership
-    const website = await prisma.website.findFirst({
-      where: { 
-        id,
-        userId: session.user.id 
-      }
-    })
+    const website = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ? AND userId = ?',
+      [id, session.user.id]
+    )
 
     if (!website) {
       return NextResponse.json({ error: 'Website not found' }, { status: 404 })
     }
 
+    // Build update query dynamically
+    const setClause = []
+    const params = []
+    
+    if (updateData.name) {
+      setClause.push('name = ?')
+      params.push(updateData.name)
+    }
+    
+    if (updateData.status) {
+      setClause.push('status = ?')
+      params.push(updateData.status)
+    }
+    
+    setClause.push('updatedAt = ?')
+    params.push(new Date().toISOString())
+    params.push(id)
+
     // Update website
-    const updatedWebsite = await prisma.website.update({
-      where: { id },
-      data: updateData
-    })
+    db.execute(
+      `UPDATE Website SET ${setClause.join(', ')} WHERE id = ?`,
+      params
+    )
+
+    // Fetch updated website
+    const updatedWebsite = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ?',
+      [id]
+    )
 
     return NextResponse.json({ 
       success: true, 
@@ -151,7 +173,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as any
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -164,21 +186,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify website ownership
-    const website = await prisma.website.findFirst({
-      where: { 
-        id,
-        userId: session.user.id 
-      }
-    })
+    const website = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ? AND userId = ?',
+      [id, session.user.id]
+    )
 
     if (!website) {
       return NextResponse.json({ error: 'Website not found' }, { status: 404 })
     }
 
-    // Delete website (cascade will handle related data)
-    await prisma.website.delete({
-      where: { id }
-    })
+    // Delete website (foreign key constraints will handle related data)
+    db.execute('DELETE FROM Website WHERE id = ?', [id])
 
     return NextResponse.json({ 
       success: true, 

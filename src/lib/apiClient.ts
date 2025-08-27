@@ -1,5 +1,43 @@
 import axios from 'axios'
 
+// Type definitions
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+interface CreateUserData {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+interface CreateWebsiteData {
+  name: string;
+  url: string;
+}
+
+interface UpdateWebsiteData {
+  name?: string;
+  url?: string;
+}
+
+interface AutomationRequest {
+  websiteId: string;
+  recommendationIds?: string[];
+  autoImplement?: boolean;
+  gitConfig?: {
+    repositoryUrl?: string;
+    branch?: string;
+    username?: string;
+    email?: string;
+    authMethod?: string;
+    personalAccessToken?: string;
+    sshKeyPath?: string;
+    password?: string;
+  };
+}
+
 // API Client Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://fluentpost.in' 
@@ -57,112 +95,32 @@ apiClient.interceptors.response.use(
 
 // API Methods
 export const api = {
-  // SEO APIs
-  seo: {
-    // Get recommendations
-    getRecommendations: async (params?: { websiteId?: string; status?: string; priority?: string }) => {
-      const response = await apiClient.get('/api/seo/recommendations', { params })
-      return response.data
-    },
-
-    // Update recommendation status
-    updateRecommendation: async (recommendationId: string, status: string) => {
-      const response = await apiClient.put('/api/seo/recommendations', {
-        recommendationId,
-        status
-      })
-      return response.data
-    },
-
-    // Get audit history
-    getAuditHistory: async (params?: { websiteId?: string }) => {
-      const response = await apiClient.get('/api/seo/audit', { params })
-      return response.data
-    },
-
-    // Perform website audit
-    performAudit: async (websiteId: string, url: string) => {
-      const response = await apiClient.post('/api/seo/audit', {
-        websiteId,
-        url
-      })
-      return response.data
-    },
-
-    // Research keywords
-    researchKeywords: async (domain: string, seedKeywords: string[]) => {
-      const response = await apiClient.post('/api/seo/keywords', {
-        domain,
-        seedKeywords
-      })
-      return response.data
-    },
-
-    // Analyze website
-    analyzeWebsite: async (websiteId: string, url: string) => {
-      const response = await apiClient.post('/api/seo/analyze', {
-        websiteId,
-        url
-      })
-      return response.data
-    },
-
-    // Generate recommendations from audit results
-    generateRecommendations: async (params: { websiteId?: string; auditResults?: any }) => {
-      const response = await apiClient.post('/api/seo/recommendations', {
-        websiteId: params.websiteId,
-        auditResults: params.auditResults
-      })
-      return response.data
-    }
+  auth: {
+    register: (userData: CreateUserData) => apiClient.post('/api/auth?action=register', userData),
+    login: (credentials: LoginCredentials) => apiClient.post('/api/auth?action=login', credentials),
+    resetPassword: (email: string, newPassword?: string) => 
+      apiClient.post('/api/auth?action=reset-password', { email, newPassword }),
+    checkUser: (email: string) => apiClient.post('/api/auth?action=check-user', { email }),
+    emergencyCreate: (email: string) => apiClient.post('/api/auth?action=emergency-create', { email }),
+    getProfile: () => apiClient.get('/api/auth?action=profile'),
   },
-
-  // Website management
   websites: {
-    // Get all websites
-    getAll: async () => {
-      const response = await apiClient.get('/api/websites')
-      return response.data
-    },
-
-    // Create website
-    create: async (name: string, url: string) => {
-      const response = await apiClient.post('/api/websites', {
-        name,
-        url
-      })
-      return response.data
-    },
-
-    // Update website
-    update: async (id: string, data: { name?: string; url?: string }) => {
-      const response = await apiClient.put(`/api/websites/${id}`, data)
-      return response.data
-    },
-
-    // Delete website
-    delete: async (id: string) => {
-      const response = await apiClient.delete(`/api/websites/${id}`)
-      return response.data
-    }
+    create: (websiteData: CreateWebsiteData) => apiClient.post('/api/websites', websiteData),
+    getAll: () => apiClient.get('/api/websites'),
+    getById: (id: string) => apiClient.get(`/api/websites/${id}`),
+    update: (id: string, websiteData: UpdateWebsiteData) => apiClient.put(`/api/websites/${id}`, websiteData),
+    delete: (id: string) => apiClient.delete(`/api/websites/${id}`),
   },
-
-  // Test endpoint
-  test: {
-    fetch: async () => {
-      const response = await apiClient.get('/api/test-fetch')
-      return response.data
+  seo: {
+    audit: (websiteId: string) => apiClient.post('/api/seo/audit', { websiteId }),
+    recommendations: {
+      getAll: () => apiClient.get('/api/seo/recommendations'),
+      generate: (websiteId: string) => apiClient.post('/api/seo/recommendations', { websiteId }),
     },
-    seo: async () => {
-      const response = await apiClient.get('/api/test-seo')
-      return response.data
-    },
-    recommendations: async () => {
-      const response = await apiClient.get('/api/test-recommendations')
-      return response.data
-    }
-  }
-}
+    automate: (data: AutomationRequest) => apiClient.post('/api/seo/automate', data),
+    testGitConnection: (gitConfig: any) => apiClient.post('/api/seo/test-git-connection', gitConfig),
+  },
+};
 
-// Export the client for direct use if needed
-export default apiClient
+// Export the apiClient instance
+export default apiClient;
