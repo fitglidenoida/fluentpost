@@ -194,6 +194,15 @@ export const initializeDatabase = () => {
       FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE
     );
 
+    -- App Settings table
+    CREATE TABLE IF NOT EXISTS AppSettings (
+      id TEXT PRIMARY KEY,
+      key TEXT UNIQUE NOT NULL,
+      value TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Create indexes for better performance
     CREATE INDEX IF NOT EXISTS idx_website_userId ON Website(userId);
     CREATE INDEX IF NOT EXISTS idx_seo_recommendation_websiteId ON SEORecommendation(websiteId);
@@ -202,6 +211,7 @@ export const initializeDatabase = () => {
     CREATE INDEX IF NOT EXISTS idx_page_analysis_websiteId ON PageAnalysis(websiteId);
     CREATE INDEX IF NOT EXISTS idx_keyword_research_websiteId ON KeywordResearch(websiteId);
     CREATE INDEX IF NOT EXISTS idx_keyword_research_keyword ON KeywordResearch(keyword);
+    CREATE INDEX IF NOT EXISTS idx_app_settings_key ON AppSettings(key);
   `;
 
   // Execute schema creation

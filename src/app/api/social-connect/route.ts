@@ -67,12 +67,13 @@ class SocialMediaConnector {
   }
 
   async storeCredentials(platform: string, credentials: any): Promise<void> {
-    const { prisma } = await import('@/lib/db')
+    const db = (await import('@/lib/db')).default
     
     // Get current settings
-    const currentSettings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const currentSettings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
 
     let settings = currentSettings ? JSON.parse(currentSettings.value) : {
       notifications: { email: true, push: false, weeklyReports: true, viralAlerts: true },
@@ -95,12 +96,21 @@ class SocialMediaConnector {
       ...credentials
     }
 
-    // Save back to database
-    await prisma.appSettings.upsert({
-      where: { key: 'user_settings' },
-      update: { value: JSON.stringify(settings) },
-      create: { key: 'user_settings', value: JSON.stringify(settings) }
-    })
+    // Save back to database (manual upsert)
+    const settingsId = `settings_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const existingSettings = db.queryFirst('SELECT id FROM AppSettings WHERE key = ?', ['user_settings'])
+    
+    if (existingSettings) {
+      db.execute(
+        'UPDATE AppSettings SET value = ?, updatedAt = datetime(\'now\') WHERE key = ?',
+        [JSON.stringify(settings), 'user_settings']
+      )
+    } else {
+      db.execute(
+        'INSERT INTO AppSettings (id, key, value, createdAt, updatedAt) VALUES (?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+        [settingsId, 'user_settings', JSON.stringify(settings)]
+      )
+    }
   }
 }
 
@@ -183,10 +193,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current settings
-    const { prisma } = await import('@/lib/db')
-    const currentSettings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
-    })
+    const db = (await import('@/lib/db')).default
+    const currentSettings = db.queryFirst(
+      'SELECT * FROM AppSettings WHERE key = ?',
+      ['user_settings']
+    )
 
     if (!currentSettings) {
       return NextResponse.json({
