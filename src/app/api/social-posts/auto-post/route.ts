@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
         content: 'Sample social media post content',
         platform: platforms.join(','),
         status: 'draft',
-        blogPost: null
+        blogPost: null,
+        publishedAt: null as Date | null,
       }
     } else {
       return NextResponse.json(
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
         status: 'scheduled',
         userId: 'cmerb0ul10000v37n3jqqjoq4',
         blogPostId: blogPost.id,
+        publishedAt: null as Date | null,
       }
     } else if (existingSocialPost) {
       postContent = existingSocialPost.content
