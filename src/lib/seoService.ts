@@ -296,13 +296,14 @@ export class SEOService {
         // Google Autocomplete API endpoint (free, no key required)
         const suggestions = await this.fetchAutocompletesSuggestions(seed)
         
-        suggestions.forEach(suggestion => {
+        // Create keywords from the main suggestions
+        suggestions.forEach((suggestion, index) => {
           if (suggestion && suggestion.length > 0) {
             autocompleteKeywords.push({
               keyword: suggestion,
-              searchVolume: this.estimateSearchVolume(suggestion), // Intelligent estimation
+              searchVolume: this.estimateSearchVolume(suggestion),
               difficulty: this.estimateDifficulty(suggestion),
-              suggestions: [], // Will be populated later
+              suggestions: suggestions.filter(s => s !== suggestion).slice(0, 6), // Other suggestions as related
               relatedKeywords: []
             })
           }
@@ -320,25 +321,40 @@ export class SEOService {
   // Fetch real Google autocomplete suggestions
   private static async fetchAutocompletesSuggestions(query: string): Promise<string[]> {
     try {
+      console.log('🔍 Fetching real Google autocomplete for:', query)
+      
       // Google Autocomplete API (CORS-friendly endpoint)
       const url = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`
       
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; SEO-Tool/1.0)'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       })
+      
+      console.log('📡 Google API Response status:', response.status)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
       const data = await response.json()
+      console.log('📊 Google returned data:', data)
+      
       // Google returns: [query, [suggestions]]
-      return data[1] || []
+      const suggestions = data[1] || []
+      console.log('✅ Extracted suggestions:', suggestions)
+      
+      if (suggestions.length === 0) {
+        console.warn('⚠️ No suggestions from Google, using fallback')
+        return this.generateIntelligentVariations(query)
+      }
+      
+      return suggestions
     } catch (error) {
-      console.warn('Failed to fetch autocomplete suggestions for:', query, error)
+      console.error('❌ Failed to fetch autocomplete suggestions for:', query, error)
+      console.log('🔄 Using intelligent fallback variations')
       // Fallback to intelligent keyword variations
       return this.generateIntelligentVariations(query)
     }
