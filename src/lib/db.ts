@@ -354,7 +354,7 @@ export const initializeDatabase = () => {
     
     isInitialized = true;
     console.log('Database schema initialized successfully!');
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'SQLITE_BUSY') {
       console.log('Database is busy, skipping initialization (already initialized by another process)');
       isInitialized = true;

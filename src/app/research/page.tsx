@@ -24,13 +24,17 @@ export default function ResearchHub() {
   // SEO State
   const [activeTab, setActiveTab] = useState('topics') // 'topics' or 'seo'
   const [websites, setWebsites] = useState([])
-  const [selectedWebsite, setSelectedWebsite] = useState(null)
+  const [selectedWebsite, setSelectedWebsite] = useState<any>(null)
   const [showWebsiteForm, setShowWebsiteForm] = useState(false)
   const [newWebsite, setNewWebsite] = useState({
     name: '',
     url: ''
   })
-  const [keywordResearch, setKeywordResearch] = useState({
+  const [keywordResearch, setKeywordResearch] = useState<{
+    domain: string;
+    seedKeywords: string[];
+    keywords: any[];
+  }>({
     domain: '',
     seedKeywords: [''],
     keywords: []
