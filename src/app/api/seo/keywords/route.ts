@@ -4,6 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
 import db from '@/lib/db'
 import { z } from 'zod'
+import { CustomSession } from '@/types/session'
 
 const keywordResearchSchema = z.object({
   domain: z.string().url(),
@@ -12,16 +13,21 @@ const keywordResearchSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as CustomSession | null
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
+    console.log('Keyword research request body:', body)
+    
     const { domain, seedKeywords } = keywordResearchSchema.parse(body)
+    console.log('Parsed domain:', domain, 'seedKeywords:', seedKeywords)
 
     // Research keywords using SEO service
+    console.log('Starting keyword research...')
     const keywords = await SEOService.researchKeywords(domain, seedKeywords)
+    console.log('Keyword research completed, found keywords:', keywords.length)
 
     return NextResponse.json({ 
       success: true, 
@@ -29,10 +35,14 @@ export async function POST(request: NextRequest) {
       total: keywords.length
     })
 
-  } catch (error) {
-    console.error('Keyword research error:', error)
+  } catch (error: any) {
+    console.error('Keyword research error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to research keywords' }, 
+      { error: `Failed to research keywords: ${error.message}` }, 
       { status: 500 }
     )
   }
@@ -40,7 +50,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as CustomSession | null
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

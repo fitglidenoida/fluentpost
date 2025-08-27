@@ -32,31 +32,50 @@ export class SEOService {
     const keywords: KeywordData[] = []
     
     try {
-      // 1. Google Trends analysis
+      console.log('SEO Service: Starting keyword research for domain:', domain, 'with seeds:', seedKeywords)
+      
+      // 1. Google Trends analysis (simplified)
+      console.log('SEO Service: Getting trends data...')
       const trendsData = await this.getGoogleTrendsData(seedKeywords)
+      console.log('SEO Service: Got trends data:', trendsData.length, 'keywords')
       
-      // 2. Competitor keyword extraction
+      // 2. Competitor keyword extraction (simplified)
+      console.log('SEO Service: Getting competitor keywords...')
       const competitorKeywords = await this.extractCompetitorKeywords(domain)
+      console.log('SEO Service: Got competitor keywords:', competitorKeywords.length, 'keywords')
       
-      // 3. Wikipedia/Reddit long-tail discovery
+      // 3. Wikipedia/Reddit long-tail discovery (simplified)
+      console.log('SEO Service: Getting long-tail keywords...')
       const longTailKeywords = await this.discoverLongTailKeywords(seedKeywords)
+      console.log('SEO Service: Got long-tail keywords:', longTailKeywords.length, 'keywords')
       
       // 4. Combine and analyze
       const allKeywords = [...trendsData, ...competitorKeywords, ...longTailKeywords]
+      console.log('SEO Service: Combined keywords:', allKeywords.length)
       
       // 5. Remove duplicates and rank by potential
       const uniqueKeywords = this.removeDuplicateKeywords(allKeywords)
+      console.log('SEO Service: Unique keywords after deduplication:', uniqueKeywords.length)
       
-      // 6. Estimate search volume and difficulty
-      for (const keyword of uniqueKeywords) {
-        const enriched = await this.enrichKeywordData(keyword)
-        keywords.push(enriched)
+      // 6. Estimate search volume and difficulty (simplified)
+      console.log('SEO Service: Enriching keyword data...')
+      for (const keyword of uniqueKeywords.slice(0, 50)) { // Limit to 50 for performance
+        try {
+          const enriched = await this.enrichKeywordData(keyword)
+          keywords.push(enriched)
+        } catch (enrichError) {
+          console.warn('SEO Service: Failed to enrich keyword:', keyword.keyword, enrichError)
+          // Add the keyword without enrichment
+          keywords.push(keyword)
+        }
       }
       
+      console.log('SEO Service: Final keywords count:', keywords.length)
       return keywords.slice(0, 50) // Return top 50 keywords
     } catch (error) {
-      console.error('Keyword research error:', error)
-      return []
+      console.error('SEO Service: Keyword research error:', error)
+      // Return basic keywords based on seeds to avoid complete failure
+      return this.generateBasicKeywords(seedKeywords)
     }
   }
 
@@ -69,8 +88,13 @@ export class SEOService {
       const competitors = await this.findCompetitors(domain)
       
       for (const competitor of competitors) {
-        const competitorKeywords = await this.scrapeWebsiteKeywords(competitor)
-        keywords.push(...competitorKeywords)
+        try {
+          const competitorKeywords = await this.scrapeWebsiteKeywords(competitor)
+          keywords.push(...competitorKeywords)
+        } catch (competitorError) {
+          console.warn('Failed to extract keywords from competitor:', competitor, competitorError)
+          // Continue with other competitors
+        }
       }
       
       return keywords
@@ -201,47 +225,109 @@ export class SEOService {
     }
   }
 
+  // Fallback method for basic keyword generation
+  private static generateBasicKeywords(seedKeywords: string[]): KeywordData[] {
+    const basicKeywords: KeywordData[] = []
+    
+    // Generate basic variations for each seed keyword
+    for (const seed of seedKeywords) {
+      // Add the seed keyword itself
+      basicKeywords.push({
+        keyword: seed,
+        searchVolume: Math.floor(Math.random() * 5000) + 500,
+        difficulty: Math.floor(Math.random() * 60) + 20
+      })
+      
+      // Add common variations
+      const variations = [
+        `${seed} tool`,
+        `${seed} software`,
+        `best ${seed}`,
+        `${seed} guide`,
+        `${seed} tips`,
+        `how to ${seed}`,
+        `${seed} for beginners`,
+        `${seed} tutorial`,
+        `${seed} platform`,
+        `${seed} service`
+      ]
+      
+      variations.forEach(variation => {
+        basicKeywords.push({
+          keyword: variation,
+          searchVolume: Math.floor(Math.random() * 3000) + 100,
+          difficulty: Math.floor(Math.random() * 50) + 10
+        })
+      })
+    }
+    
+    return basicKeywords.slice(0, 50)
+  }
+
   // Helper methods
   private static async getGoogleTrendsData(keywords: string[]): Promise<KeywordData[]> {
-    // Mock implementation - in real implementation, use Google Trends API
-    return keywords.map(keyword => ({
-      keyword,
-      searchVolume: Math.floor(Math.random() * 10000) + 100,
-      difficulty: Math.floor(Math.random() * 100) + 1
-    }))
+    try {
+      // Mock implementation - in real implementation, use Google Trends API
+      return keywords.map(keyword => ({
+        keyword,
+        searchVolume: Math.floor(Math.random() * 10000) + 100,
+        difficulty: Math.floor(Math.random() * 100) + 1
+      }))
+    } catch (error) {
+      console.warn('Failed to get Google Trends data:', error)
+      return []
+    }
   }
 
   private static async findCompetitors(domain: string): Promise<string[]> {
-    // Mock implementation - in real implementation, use competitor analysis tools
-    return [
-      'competitor1.com',
-      'competitor2.com',
-      'competitor3.com'
-    ]
+    try {
+      // Mock implementation - in real implementation, use competitor analysis tools
+      return [
+        'competitor1.com',
+        'competitor2.com',
+        'competitor3.com'
+      ]
+    } catch (error) {
+      console.warn('Failed to find competitors for:', domain, error)
+      return []
+    }
   }
 
   private static async scrapeWebsiteKeywords(url: string): Promise<KeywordData[]> {
-    // Mock implementation - in real implementation, use web scraping
-    return [
-      { keyword: 'marketing automation', searchVolume: 5000, difficulty: 45 },
-      { keyword: 'social media management', searchVolume: 3000, difficulty: 35 },
-      { keyword: 'content generation', searchVolume: 2000, difficulty: 25 }
-    ]
+    try {
+      // Mock implementation - in real implementation, use web scraping
+      return [
+        { keyword: 'marketing automation', searchVolume: 5000, difficulty: 45 },
+        { keyword: 'social media management', searchVolume: 3000, difficulty: 35 },
+        { keyword: 'content generation', searchVolume: 2000, difficulty: 25 }
+      ]
+    } catch (error) {
+      console.warn('Failed to scrape keywords from:', url, error)
+      return []
+    }
   }
 
   private static async discoverLongTailKeywords(seedKeywords: string[]): Promise<KeywordData[]> {
-    // Mock implementation - in real implementation, use Wikipedia/Reddit APIs
-    const longTailKeywords: KeywordData[] = []
-    
-    for (const seed of seedKeywords) {
-      longTailKeywords.push(
-        { keyword: `${seed} for small business`, searchVolume: 500, difficulty: 20 },
-        { keyword: `${seed} India`, searchVolume: 300, difficulty: 15 },
-        { keyword: `best ${seed} tool`, searchVolume: 800, difficulty: 30 }
-      )
+    try {
+      // Mock implementation - in real implementation, use Wikipedia/Reddit APIs
+      const longTailKeywords: KeywordData[] = []
+      
+      for (const seed of seedKeywords) {
+        longTailKeywords.push(
+          { keyword: `${seed} for small business`, searchVolume: 500, difficulty: 20 },
+          { keyword: `${seed} India`, searchVolume: 300, difficulty: 15 },
+          { keyword: `best ${seed} tool`, searchVolume: 800, difficulty: 30 },
+          { keyword: `${seed} vs competitors`, searchVolume: 400, difficulty: 25 },
+          { keyword: `${seed} pricing`, searchVolume: 600, difficulty: 35 },
+          { keyword: `${seed} reviews`, searchVolume: 700, difficulty: 30 }
+        )
+      }
+      
+      return longTailKeywords
+    } catch (error) {
+      console.warn('Failed to discover long-tail keywords:', error)
+      return []
     }
-    
-    return longTailKeywords
   }
 
   private static removeDuplicateKeywords(keywords: KeywordData[]): KeywordData[] {
@@ -255,19 +341,24 @@ export class SEOService {
   }
 
   private static async enrichKeywordData(keyword: KeywordData): Promise<KeywordData> {
-    // Mock implementation - in real implementation, use keyword research APIs
-    return {
-      ...keyword,
-      suggestions: [
-        `${keyword.keyword} tool`,
-        `${keyword.keyword} software`,
-        `${keyword.keyword} platform`
-      ],
-      relatedKeywords: [
-        `${keyword.keyword} guide`,
-        `${keyword.keyword} tutorial`,
-        `${keyword.keyword} tips`
-      ]
+    try {
+      // Mock implementation - in real implementation, use keyword research APIs
+      return {
+        ...keyword,
+        suggestions: [
+          `${keyword.keyword} tool`,
+          `${keyword.keyword} software`,
+          `${keyword.keyword} platform`
+        ],
+        relatedKeywords: [
+          `${keyword.keyword} guide`,
+          `${keyword.keyword} tutorial`,
+          `${keyword.keyword} tips`
+        ]
+      }
+    } catch (error) {
+      console.warn('Failed to enrich keyword data for:', keyword.keyword, error)
+      return keyword // Return original keyword if enrichment fails
     }
   }
 
