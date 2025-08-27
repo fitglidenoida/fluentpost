@@ -38,6 +38,46 @@ interface AutomationRequest {
   };
 }
 
+interface CreateKeywordData {
+  websiteId: string;
+  keyword: string;
+  searchVolume?: number;
+  difficulty?: number;
+  competition?: number;
+  intent?: 'informational' | 'commercial' | 'transactional' | 'navigational';
+}
+
+interface SaveKeywordsData {
+  websiteId: string;
+  keywords: Array<{
+    keyword: string;
+    searchVolume?: number;
+    difficulty?: number;
+    competition?: number;
+    intent?: string;
+    suggestions?: string[];
+  }>;
+  groupName?: string;
+}
+
+interface CreateTopicCategoryData {
+  websiteId: string;
+  name: string;
+  description?: string;
+  color?: string;
+}
+
+interface CreateTopicData {
+  title: string;
+  description?: string;
+  categoryId?: string;
+  keywords: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  contentType?: 'blog' | 'video' | 'social' | 'guide';
+  priority?: 'low' | 'medium' | 'high';
+  estimatedWordCount?: number;
+}
+
 // API Client Configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://fluentpost.in' 
@@ -124,6 +164,35 @@ export const api = {
     generateRecommendations: (data: any) => apiClient.post('/api/seo/recommendations', data),
     automate: (data: AutomationRequest) => apiClient.post('/api/seo/automate', data),
     testGitConnection: (gitConfig: any) => apiClient.post('/api/seo/test-git-connection', gitConfig),
+  },
+  keywords: {
+    getAll: (websiteId?: string, groupId?: string) => {
+      const params = new URLSearchParams()
+      if (websiteId) params.append('websiteId', websiteId)
+      if (groupId) params.append('groupId', groupId)
+      return apiClient.get(`/api/keywords?${params.toString()}`)
+    },
+    create: (keywordData: CreateKeywordData) => apiClient.post('/api/keywords', keywordData),
+    saveFromResearch: (data: SaveKeywordsData) => apiClient.post('/api/keywords', data),
+  },
+  topicCategories: {
+    getAll: (websiteId?: string) => {
+      const params = websiteId ? `?websiteId=${websiteId}` : ''
+      return apiClient.get(`/api/topic-categories${params}`)
+    },
+    create: (categoryData: CreateTopicCategoryData) => apiClient.post('/api/topic-categories', categoryData),
+    update: (id: string, updateData: Partial<CreateTopicCategoryData>) => 
+      apiClient.put('/api/topic-categories', { id, ...updateData }),
+    delete: (id: string) => apiClient.delete(`/api/topic-categories?id=${id}`),
+  },
+  topics: {
+    getAll: (categoryId?: string, status?: string) => {
+      const params = new URLSearchParams()
+      if (categoryId) params.append('categoryId', categoryId)
+      if (status) params.append('status', status)
+      return apiClient.get(`/api/topics?${params.toString()}`)
+    },
+    create: (topicData: CreateTopicData) => apiClient.post('/api/topics', topicData),
   },
 };
 

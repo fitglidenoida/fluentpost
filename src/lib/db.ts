@@ -69,7 +69,12 @@ export const dbHelpers = {
 };
 
 // Initialize database schema
+let isInitialized = false;
 export const initializeDatabase = () => {
+  if (isInitialized) {
+    return;
+  }
+  
   console.log('Initializing database schema...');
   
   // Create tables
@@ -180,7 +185,7 @@ export const initializeDatabase = () => {
       UNIQUE(websiteId, url)
     );
 
-    -- Keyword Research table
+    -- Keyword Research table (legacy - keeping for backward compatibility)
     CREATE TABLE IF NOT EXISTS KeywordResearch (
       id TEXT PRIMARY KEY,
       websiteId TEXT NOT NULL,
@@ -192,6 +197,112 @@ export const initializeDatabase = () => {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE
+    );
+
+    -- Phase 1: Enhanced Keyword and Topic Management Tables
+    
+    -- Keywords table (individual keywords with metadata)
+    CREATE TABLE IF NOT EXISTS Keywords (
+      id TEXT PRIMARY KEY,
+      websiteId TEXT NOT NULL,
+      keyword TEXT NOT NULL,
+      searchVolume INTEGER,
+      difficulty INTEGER,
+      competition INTEGER,
+      intent TEXT, -- informational, commercial, transactional, navigational
+      status TEXT DEFAULT 'active', -- active, archived
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE,
+      UNIQUE(websiteId, keyword)
+    );
+
+    -- Keyword Groups table (organize keywords into groups)
+    CREATE TABLE IF NOT EXISTS KeywordGroups (
+      id TEXT PRIMARY KEY,
+      websiteId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      targetAudience TEXT,
+      color TEXT DEFAULT '#3B82F6', -- for UI organization
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE,
+      UNIQUE(websiteId, name)
+    );
+
+    -- Keyword Group Mappings table (many-to-many relationship)
+    CREATE TABLE IF NOT EXISTS KeywordGroupMappings (
+      id TEXT PRIMARY KEY,
+      keywordId TEXT NOT NULL,
+      groupId TEXT NOT NULL,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (keywordId) REFERENCES Keywords(id) ON DELETE CASCADE,
+      FOREIGN KEY (groupId) REFERENCES KeywordGroups(id) ON DELETE CASCADE,
+      UNIQUE(keywordId, groupId)
+    );
+
+    -- Topic Categories table (organize topics into categories)
+    CREATE TABLE IF NOT EXISTS TopicCategories (
+      id TEXT PRIMARY KEY,
+      websiteId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      color TEXT DEFAULT '#10B981', -- for UI organization
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE,
+      UNIQUE(websiteId, name)
+    );
+
+    -- Topic Ideas table (AI-generated and manual topic ideas)
+    CREATE TABLE IF NOT EXISTS TopicIdeas (
+      id TEXT PRIMARY KEY,
+      websiteId TEXT NOT NULL,
+      categoryId TEXT,
+      title TEXT NOT NULL,
+      description TEXT,
+      contentType TEXT DEFAULT 'blog', -- blog, video, social, guide
+      priority TEXT DEFAULT 'medium', -- low, medium, high
+      difficulty TEXT DEFAULT 'medium', -- easy, medium, hard
+      estimatedWordCount INTEGER,
+      aiGenerated BOOLEAN DEFAULT FALSE,
+      status TEXT DEFAULT 'idea', -- idea, researching, content_created, published
+      viralScore REAL DEFAULT 0.0,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (websiteId) REFERENCES Website(id) ON DELETE CASCADE,
+      FOREIGN KEY (categoryId) REFERENCES TopicCategories(id) ON DELETE SET NULL
+    );
+
+    -- Topic Keywords table (link topics to their target keywords)
+    CREATE TABLE IF NOT EXISTS TopicKeywords (
+      id TEXT PRIMARY KEY,
+      topicId TEXT NOT NULL,
+      keywordId TEXT NOT NULL,
+      usage TEXT DEFAULT 'secondary', -- primary, secondary, related
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (topicId) REFERENCES TopicIdeas(id) ON DELETE CASCADE,
+      FOREIGN KEY (keywordId) REFERENCES Keywords(id) ON DELETE CASCADE,
+      UNIQUE(topicId, keywordId)
+    );
+
+    -- Content Briefs table (detailed content plans generated from topics)
+    CREATE TABLE IF NOT EXISTS ContentBriefs (
+      id TEXT PRIMARY KEY,
+      topicId TEXT NOT NULL,
+      outline TEXT, -- JSON structure with H2/H3 hierarchy
+      suggestedTitle TEXT,
+      metaDescription TEXT,
+      targetWordCount INTEGER,
+      researchPoints TEXT, -- JSON array of research points to include
+      callToAction TEXT,
+      internalLinks TEXT, -- JSON array of suggested internal links
+      difficulty TEXT DEFAULT 'medium',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (topicId) REFERENCES TopicIdeas(id) ON DELETE CASCADE,
+      UNIQUE(topicId)
     );
 
     -- App Settings table
@@ -212,19 +323,46 @@ export const initializeDatabase = () => {
     CREATE INDEX IF NOT EXISTS idx_keyword_research_websiteId ON KeywordResearch(websiteId);
     CREATE INDEX IF NOT EXISTS idx_keyword_research_keyword ON KeywordResearch(keyword);
     CREATE INDEX IF NOT EXISTS idx_app_settings_key ON AppSettings(key);
+    
+    -- Phase 1: Indexes for new keyword and topic tables
+    CREATE INDEX IF NOT EXISTS idx_keywords_websiteId ON Keywords(websiteId);
+    CREATE INDEX IF NOT EXISTS idx_keywords_keyword ON Keywords(keyword);
+    CREATE INDEX IF NOT EXISTS idx_keywords_status ON Keywords(status);
+    CREATE INDEX IF NOT EXISTS idx_keyword_groups_websiteId ON KeywordGroups(websiteId);
+    CREATE INDEX IF NOT EXISTS idx_keyword_group_mappings_keywordId ON KeywordGroupMappings(keywordId);
+    CREATE INDEX IF NOT EXISTS idx_keyword_group_mappings_groupId ON KeywordGroupMappings(groupId);
+    CREATE INDEX IF NOT EXISTS idx_topic_categories_websiteId ON TopicCategories(websiteId);
+    CREATE INDEX IF NOT EXISTS idx_topic_ideas_websiteId ON TopicIdeas(websiteId);
+    CREATE INDEX IF NOT EXISTS idx_topic_ideas_categoryId ON TopicIdeas(categoryId);
+    CREATE INDEX IF NOT EXISTS idx_topic_ideas_status ON TopicIdeas(status);
+    CREATE INDEX IF NOT EXISTS idx_topic_ideas_priority ON TopicIdeas(priority);
+    CREATE INDEX IF NOT EXISTS idx_topic_keywords_topicId ON TopicKeywords(topicId);
+    CREATE INDEX IF NOT EXISTS idx_topic_keywords_keywordId ON TopicKeywords(keywordId);
+    CREATE INDEX IF NOT EXISTS idx_content_briefs_topicId ON ContentBriefs(topicId);
   `;
 
   // Execute schema creation
-  dbHelpers.transaction(() => {
-    const statements = createTables.split(';').filter(stmt => stmt.trim());
-    statements.forEach(statement => {
-      if (statement.trim()) {
-        dbHelpers.execute(statement.trim());
-      }
+  try {
+    dbHelpers.transaction(() => {
+      const statements = createTables.split(';').filter(stmt => stmt.trim());
+      statements.forEach(statement => {
+        if (statement.trim()) {
+          dbHelpers.execute(statement.trim());
+        }
+      });
     });
-  });
-
-  console.log('Database schema initialized successfully!');
+    
+    isInitialized = true;
+    console.log('Database schema initialized successfully!');
+  } catch (error) {
+    if (error.code === 'SQLITE_BUSY') {
+      console.log('Database is busy, skipping initialization (already initialized by another process)');
+      isInitialized = true;
+    } else {
+      console.error('Database initialization error:', error);
+      throw error;
+    }
+  }
 };
 
 // Auto-initialize on import

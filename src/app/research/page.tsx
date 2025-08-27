@@ -46,6 +46,12 @@ export default function ResearchHub() {
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false)
   const [auditHistory, setAuditHistory] = useState([])
   const [isLoadingAuditHistory, setIsLoadingAuditHistory] = useState(false)
+  
+  // Keyword saving state
+  const [selectedKeywords, setSelectedKeywords] = useState<Set<string>>(new Set())
+  const [showSaveKeywordsModal, setShowSaveKeywordsModal] = useState(false)
+  const [keywordGroupName, setKeywordGroupName] = useState('')
+  const [isSavingKeywords, setIsSavingKeywords] = useState(false)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -165,12 +171,82 @@ export default function ResearchHub() {
         keywordResearch.seedKeywords.filter(k => k.trim())
       )
       setKeywordResearch(prev => ({ ...prev, keywords: data.data.keywords }))
+      setSelectedKeywords(new Set()) // Reset selection
       alert(`Found ${data.data.total} keywords!`)
     } catch (error) {
       console.error('Error researching keywords:', error)
       alert('Error researching keywords')
     } finally {
       setIsResearching(false)
+    }
+  }
+
+  const toggleKeywordSelection = (keyword: any) => {
+    const newSelection = new Set(selectedKeywords)
+    const keywordId = keyword.keyword
+    
+    if (newSelection.has(keywordId)) {
+      newSelection.delete(keywordId)
+    } else {
+      newSelection.add(keywordId)
+    }
+    
+    setSelectedKeywords(newSelection)
+  }
+
+  const selectAllKeywords = () => {
+    if (selectedKeywords.size === keywordResearch.keywords.length) {
+      setSelectedKeywords(new Set())
+    } else {
+      setSelectedKeywords(new Set(keywordResearch.keywords.map(k => k.keyword)))
+    }
+  }
+
+  const saveSelectedKeywords = async () => {
+    if (selectedKeywords.size === 0) {
+      alert('Please select keywords to save')
+      return
+    }
+
+    if (!selectedWebsite) {
+      alert('Please select a website first')
+      return
+    }
+
+    setIsSavingKeywords(true)
+    try {
+      const selectedKeywordData = keywordResearch.keywords.filter(k => 
+        selectedKeywords.has(k.keyword)
+      )
+
+      const saveData = {
+        websiteId: selectedWebsite.id,
+        keywords: selectedKeywordData.map(k => ({
+          keyword: k.keyword,
+          searchVolume: k.searchVolume,
+          difficulty: k.difficulty,
+          competition: k.competition,
+          intent: k.intent || 'informational',
+          suggestions: k.suggestions || []
+        })),
+        groupName: keywordGroupName || `Research Session ${new Date().toLocaleDateString()}`
+      }
+
+      const response = await api.keywords.saveFromResearch(saveData)
+      
+      if (response.data.success) {
+        alert(`Successfully saved ${response.data.savedCount} keywords!`)
+        setShowSaveKeywordsModal(false)
+        setKeywordGroupName('')
+        setSelectedKeywords(new Set())
+      } else {
+        alert('Failed to save keywords')
+      }
+    } catch (error) {
+      console.error('Error saving keywords:', error)
+      alert('Error saving keywords')
+    } finally {
+      setIsSavingKeywords(false)
     }
   }
 
@@ -668,24 +744,54 @@ export default function ResearchHub() {
 
                 {/* Results */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Research Results</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900">Research Results</h3>
+                    {keywordResearch.keywords.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={selectAllKeywords}
+                          className="text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          {selectedKeywords.size === keywordResearch.keywords.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                        {selectedKeywords.size > 0 && (
+                          <button
+                            onClick={() => setShowSaveKeywordsModal(true)}
+                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            Save Selected ({selectedKeywords.size})
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {keywordResearch.keywords.map((keyword: any, index: number) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-gray-900">{keyword.keyword}</span>
-                          <span className="text-sm text-gray-500">Difficulty: {keyword.difficulty || 'N/A'}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-gray-600">
-                          <span>Volume: {keyword.searchVolume || 'N/A'}</span>
-                          {keyword.suggestions && (
-                            <button 
-                              onClick={() => viewSuggestions(keyword)}
-                              className="text-blue-600 cursor-pointer hover:underline"
-                            >
-                              View suggestions
-                            </button>
-                          )}
+                      <div key={index} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedKeywords.has(keyword.keyword)}
+                            onChange={() => toggleKeywordSelection(keyword)}
+                            className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium text-gray-900">{keyword.keyword}</span>
+                              <span className="text-sm text-gray-500">Difficulty: {keyword.difficulty || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <span>Volume: {keyword.searchVolume || 'N/A'}</span>
+                              {keyword.suggestions && (
+                                <button 
+                                  onClick={() => viewSuggestions(keyword)}
+                                  className="text-blue-600 cursor-pointer hover:underline"
+                                >
+                                  View suggestions
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1202,6 +1308,71 @@ export default function ResearchHub() {
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Copy Keyword
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Save Keywords Modal */}
+        {showSaveKeywordsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Save Keywords</h2>
+                <button 
+                  onClick={() => setShowSaveKeywordsModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Selected Keywords ({selectedKeywords.size})</h3>
+                  <div className="text-blue-700 text-sm max-h-32 overflow-y-auto">
+                    {Array.from(selectedKeywords).join(', ')}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Group Name (Optional)
+                  </label>
+                  <input 
+                    type="text"
+                    value={keywordGroupName}
+                    onChange={(e) => setKeywordGroupName(e.target.value)}
+                    placeholder={`Research Session ${new Date().toLocaleDateString()}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Keywords will be organized in this group for easier management
+                  </p>
+                </div>
+
+                {selectedWebsite && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-sm text-gray-600">Saving to website:</div>
+                    <div className="font-medium text-gray-900">{selectedWebsite.name}</div>
+                  </div>
+                )}
+                
+                <div className="flex gap-3">
+                  <button 
+                    onClick={saveSelectedKeywords}
+                    disabled={isSavingKeywords}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    {isSavingKeywords ? 'Saving...' : 'Save Keywords'}
+                  </button>
+                  <button 
+                    onClick={() => setShowSaveKeywordsModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
