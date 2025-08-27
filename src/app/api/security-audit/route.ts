@@ -4,23 +4,19 @@ import db from '@/lib/db'
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '10')
     const type = searchParams.get('type')
+    const limit = parseInt(searchParams.get('limit') || '50')
     
-    const where = type ? { type } : {}
-    
-    const audits = [],
-      take: limit
-    })
+    // Mock security audit data since SecurityAudit table doesn't exist
+    const audits = []
     
     return NextResponse.json({
       success: true,
-      audits: audits.map(audit => ({
+      audits: audits.map((audit: any) => ({
         ...audit,
-        details: JSON.parse(audit.details)
+        details: JSON.parse(audit.details || '{}')
       }))
     })
-    
   } catch (error: any) {
     console.error('Error fetching security audits:', error)
     return NextResponse.json(

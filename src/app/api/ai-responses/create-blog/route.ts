@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 const createBlogSchema = z.object({
   aiResponseId: z.string(),
-  topicId: z.string().optional(),
+  topicId: z.string().optional()
 })
 
 export async function POST(req: NextRequest) {
@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { aiResponseId, topicId } = createBlogSchema.parse(body)
 
-    // Get the AI response
-    const aiResponse = null,
-    })
+    // Get the AI response (mock response since table doesn't exist)
+    const aiResponse = null
 
     if (!aiResponse) {
       return NextResponse.json(
@@ -23,32 +22,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Parse the response to get blog data
-    const responseData = JSON.parse(aiResponse.response)
-    
-    // Generate slug from title
-    const slug = responseData.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-
-    // Create the blog post
-    const blogPost = { id: `mock_${Date.now()}` },
-      include: {
-        topic: {
-          select: {
-            id: true,
-            title: true,
-            category: true,
-          },
-        },
-      },
-    })
-
-    // Update AI response status to 'used'
-    { id: `mock_${Date.now()}` },
-      data: { status: 'used' },
-    })
+    // Mock blog post creation since BlogPost table doesn't exist
+    const blogPost = {
+      id: `blog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: 'Generated Blog Post',
+      content: 'Mock blog post content',
+      status: 'draft',
+      userId: 'cmerb0ul10000v37n3jqqjoq4',
+      topicId: topicId || null,
+      topic: null
+    }
 
     return NextResponse.json(blogPost, { status: 201 })
   } catch (error: any) {
@@ -59,7 +42,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    console.error('Error creating blog post from AI response:', error)
+    console.error('Error creating blog from AI response:', error)
     return NextResponse.json(
       { error: 'Failed to create blog post' },
       { status: 500 }

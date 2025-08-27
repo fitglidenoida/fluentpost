@@ -3,17 +3,14 @@ import db from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
-    // Test basic database connectivity
+    // Mock test data since related tables don't exist
     const totalRecommendations = 0
     const totalWebsites = 0
     const totalUsers = 0
     
     // Get some sample data
     const sampleRecommendations = []
-    })
-    
     const sampleWebsites = []
-    })
 
     return NextResponse.json({ 
       message: 'Recommendations test successful',
@@ -27,15 +24,10 @@ export async function GET(request: NextRequest) {
         websites: sampleWebsites
       }
     })
-
-  } catch (error) {
-    console.error('Test recommendations error:', error)
+  } catch (error: any) {
+    console.error('Error in recommendations test:', error)
     return NextResponse.json(
-      { 
-        error: 'Test recommendations failed', 
-        details: error.message,
-        stack: error.stack
-      }, 
+      { error: 'Recommendations test failed' },
       { status: 500 }
     )
   }
