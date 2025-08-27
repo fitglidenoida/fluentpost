@@ -154,7 +154,7 @@ export const api = {
   seo: {
     audit: (websiteId: string) => apiClient.post('/api/seo/audit', { websiteId }),
     getAuditHistory: () => apiClient.get('/api/seo/audit'),
-    researchKeywords: (domain: string, keywords: string[]) => apiClient.post('/api/seo/keywords', { domain, keywords }),
+    researchKeywords: (domain: string, keywords: string[]) => apiClient.post('/api/seo/keywords', { domain, seedKeywords: keywords }),
     recommendations: {
       getAll: () => apiClient.get('/api/seo/recommendations'),
       generate: (websiteId: string) => apiClient.post('/api/seo/recommendations', { websiteId }),
