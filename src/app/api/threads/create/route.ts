@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ThreadConverter } from '@/lib/threadConverter'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {

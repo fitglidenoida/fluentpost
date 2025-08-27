@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 interface Campaign {
   id: string
@@ -21,19 +21,8 @@ interface Campaign {
 
 async function getCampaignsData(): Promise<Campaign[]> {
   try {
-    const campaigns = await prisma.campaign.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        analytics: {
-          select: {
-            id: true,
-            type: true,
-            metric: true,
-            value: true,
-          },
-        },
-      },
-    })
+    // Mock data since Campaign table doesn't exist in our current schema
+    const campaigns: any[] = []
 
     return campaigns.map((campaign: any) => ({
       ...campaign,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 import { z } from 'zod'
 
 const generateRecommendationsSchema = z.object({
@@ -36,23 +36,21 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
 
-      // Verify website ownership (same pattern as audit API)
-      const website = await prisma.website.findFirst({
-        where: { 
-          id: websiteId,
-          userId: session.user.id 
-        }
-      })
+      // Verify website ownership
+      const website = db.queryFirst(
+        'SELECT * FROM Website WHERE id = ? AND userId = ?',
+        [websiteId, session.user.id]
+      )
 
       if (!website) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
       }
 
-      // Clear existing recommendations for this website using raw SQL
+      // Clear existing recommendations for this website
       try {
-        await prisma.$executeRawUnsafe(
+        db.execute(
           'DELETE FROM SEORecommendation WHERE websiteId = ?',
-          websiteId
+          [websiteId]
         )
         console.log('Cleared existing recommendations for website:', websiteId)
       } catch (clearError: any) {
@@ -79,28 +77,29 @@ export async function POST(request: NextRequest) {
       
       for (const rec of recommendations) {
         try {
-          const result = await prisma.$executeRawUnsafe(`
+          const recId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          
+          db.execute(`
             INSERT INTO SEORecommendation (id, websiteId, type, priority, description, action, status, createdAt, updatedAt)
             VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-          `, 
-          `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          rec.websiteId,
-          rec.type,
-          rec.priority,
-          rec.description,
-          rec.action,
-          rec.status
-          )
+          `, [
+            recId,
+            rec.websiteId,
+            rec.type,
+            rec.priority,
+            rec.description,
+            rec.action,
+            rec.status
+          ])
           
           // Get the created record
-          const created = await prisma.$queryRawUnsafe(`
+          const created = db.queryFirst(`
             SELECT * FROM SEORecommendation 
-            WHERE websiteId = ? AND description = ? 
-            ORDER BY createdAt DESC LIMIT 1
-          `, rec.websiteId, rec.description)
+            WHERE id = ?
+          `, [recId])
           
-          if (created && Array.isArray(created) && created.length > 0) {
-            createdRecommendations.push(created[0])
+          if (created) {
+            createdRecommendations.push(created)
           }
         } catch (createError: any) {
           console.error('Failed to create recommendation:', createError)
@@ -134,10 +133,6 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Recommendations API - GET request received')
     
-    // Debug: Check if prisma is working
-    console.log('Prisma client check:', typeof prisma)
-    console.log('Prisma seORecommendation check:', typeof prisma?.seORecommendation)
-    
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -147,15 +142,15 @@ export async function GET(request: NextRequest) {
 
     // Test database connection
     try {
-      const testQuery = await prisma.$queryRaw`SELECT 1 as test`
+      const testQuery = db.query('SELECT 1 as test')
       console.log('Database connection test:', testQuery)
       
       // Test if SEO tables exist
-      const tables = await prisma.$queryRaw`
+      const tables = db.query(`
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name IN ('SEORecommendation', 'Website', 'PageAnalysis')
         ORDER BY name
-      `
+      `)
       console.log('SEO tables found:', tables)
       
     } catch (dbError: any) {
@@ -171,34 +166,18 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
 
-    // Build where clause (same pattern as audit API)
-    const where: any = {}
-    
     if (websiteId) {
       // Verify website ownership
-      const website = await prisma.website.findFirst({
-        where: { 
-          id: websiteId,
-          userId: session.user.id 
-        }
-      })
+      const website = db.queryFirst(
+        'SELECT * FROM Website WHERE id = ? AND userId = ?',
+        [websiteId, session.user.id]
+      )
       if (!website) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
       }
-      where.websiteId = websiteId
-    } else {
-      // Get all recommendations for user's websites
-      const userWebsites = await prisma.website.findMany({
-        where: { userId: session.user.id },
-        select: { id: true }
-      })
-      where.websiteId = { in: userWebsites.map(w => w.id) }
     }
 
-    if (status) where.status = status
-    if (priority) where.priority = priority
-
-    // Get recommendations using raw SQL to avoid Prisma model issues
+    // Get recommendations using SQL
     let recommendations: any[] = []
     
     try {
@@ -243,13 +222,12 @@ export async function GET(request: NextRequest) {
       console.log('SQL Query:', sql)
       console.log('SQL Params:', params)
       
-      const result = await prisma.$queryRawUnsafe(sql, ...params)
-      recommendations = result as any[]
+      recommendations = db.query(sql, params)
       
-      console.log('Raw SQL recommendations found:', recommendations.length)
+      console.log('SQL recommendations found:', recommendations.length)
       
     } catch (sqlError: any) {
-      console.error('Raw SQL query failed:', sqlError)
+      console.error('SQL query failed:', sqlError)
       return NextResponse.json(
         { error: 'Failed to fetch recommendations', details: sqlError.message }, 
         { status: 500 }
@@ -292,10 +270,16 @@ export async function PUT(request: NextRequest) {
     const { recommendationId, status } = updateRecommendationSchema.parse(body)
 
     // Update recommendation status
-    const recommendation = await prisma.seORecommendation.update({
-      where: { id: recommendationId },
-      data: { status }
-    })
+    db.execute(
+      'UPDATE SEORecommendation SET status = ?, updatedAt = datetime(\'now\') WHERE id = ?',
+      [status, recommendationId]
+    )
+    
+    // Get the updated recommendation
+    const recommendation = db.queryFirst(
+      'SELECT * FROM SEORecommendation WHERE id = ?',
+      [recommendationId]
+    )
 
     return NextResponse.json({ 
       success: true, 

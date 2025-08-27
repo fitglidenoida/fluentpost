@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 import { validatePassword, hashPassword } from '@/lib/passwordValidation'
 import { emailSchema, nameSchema } from '@/lib/inputValidation'
 import { SecurityAuditLogger, getClientIP, getUserAgent } from '@/lib/securityAudit'

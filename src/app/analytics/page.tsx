@@ -1,43 +1,16 @@
 import { formatNumber } from '@/lib/utils'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 async function getAnalyticsData() {
   try {
-    const [
-      blogPosts, socialPosts, totalViews, totalShares, totalLikes, recentBlogPosts, recentSocialPosts
-    ] = await Promise.all([
-      prisma.blogPost.count(),
-      prisma.socialPost.count(),
-      prisma.blogPost.aggregate({ _sum: { views: true } }),
-      prisma.blogPost.aggregate({ _sum: { shares: true } }),
-      prisma.blogPost.aggregate({ _sum: { likes: true } }),
-      prisma.blogPost.findMany({ 
-        take: 5, 
-        orderBy: { createdAt: 'desc' }, 
-        select: { 
-          id: true, 
-          title: true, 
-          views: true, 
-          shares: true, 
-          likes: true, 
-          viralScore: true, 
-          createdAt: true 
-        } 
-      }),
-      prisma.socialPost.findMany({ 
-        take: 5, 
-        orderBy: { createdAt: 'desc' }, 
-        select: { 
-          id: true, 
-          content: true, 
-          platform: true, 
-          views: true, 
-          shares: true, 
-          likes: true, 
-          createdAt: true 
-        } 
-      })
-    ])
+    // Mock data since these tables don't exist in our current schema
+    const blogPosts = 0
+    const socialPosts = 0
+    const totalViews = { _sum: { views: 0 } }
+    const totalShares = { _sum: { shares: 0 } }
+    const totalLikes = { _sum: { likes: 0 } }
+    const recentBlogPosts: any[] = []
+    const recentSocialPosts: any[] = []
 
     const viralCoefficient = totalViews._sum.views && totalShares._sum.shares
       ? (totalShares._sum.shares / totalViews._sum.views * 100).toFixed(2)

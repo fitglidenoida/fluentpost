@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 export interface SecurityEvent {
   type: 'login_attempt' | 'login_success' | 'login_failure' | 'registration' | 'password_change' | 'suspicious_activity' | 'rate_limit_exceeded'

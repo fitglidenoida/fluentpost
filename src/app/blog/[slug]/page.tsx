@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 interface BlogPostPageProps {
   params: { slug: string }

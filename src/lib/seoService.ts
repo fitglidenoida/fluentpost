@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 
 export interface KeywordData {
   keyword: string
@@ -171,15 +171,21 @@ export class SEOService {
     const recommendations: SEORecommendation[] = []
     
     try {
-      const website = await prisma.website.findUnique({
-        where: { id: websiteId },
-        include: { pageAnalyses: true }
-      })
+      const website = db.queryFirst(
+        'SELECT * FROM Website WHERE id = ?',
+        [websiteId]
+      )
       
       if (!website) throw new Error('Website not found')
       
+      // Get page analyses for this website
+      const pageAnalyses = db.query(
+        'SELECT * FROM PageAnalysis WHERE websiteId = ?',
+        [websiteId]
+      )
+      
       // Analyze each page and generate recommendations
-      for (const page of website.pageAnalyses) {
+      for (const page of pageAnalyses) {
         const pageRecommendations = await this.analyzePageForRecommendations(page)
         recommendations.push(...pageRecommendations)
       }

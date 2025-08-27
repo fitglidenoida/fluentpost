@@ -1,4 +1,4 @@
-import { prisma } from './db'
+import db from './db'
 
 interface PostContent {
   text: string

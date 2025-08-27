@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
-import { prisma } from '@/lib/db'
+import db from '@/lib/db'
 import { z } from 'zod'
 
 const auditWebsiteSchema = z.object({
@@ -21,12 +21,10 @@ export async function POST(request: NextRequest) {
     const { websiteId, url } = auditWebsiteSchema.parse(body)
 
     // Verify website ownership
-    const website = await prisma.website.findFirst({
-      where: { 
-        id: websiteId,
-        userId: session.user.id 
-      }
-    })
+    const website = db.queryFirst(
+      'SELECT * FROM Website WHERE id = ? AND userId = ?',
+      [websiteId, session.user.id]
+    )
 
     if (!website) {
       return NextResponse.json({ error: 'Website not found' }, { status: 404 })
@@ -38,40 +36,53 @@ export async function POST(request: NextRequest) {
     console.log('Audit completed, saving to database...')
 
     // Save audit to database (upsert to handle duplicates)
-    const savedAudit = await prisma.pageAnalysis.upsert({
-      where: {
-        websiteId_url: {
-          websiteId,
-          url: audit.url
-        }
-      },
-      update: {
-        title: 'Website Audit',
-        seoScore: audit.currentState.seoScore,
-        issues: JSON.stringify({
-          technical: audit.currentState.technicalIssues,
-          content: audit.currentState.contentIssues,
-          performance: audit.currentState.performanceIssues,
-          mobile: audit.currentState.mobileIssues
-        }),
-        suggestions: JSON.stringify(audit.actionableItems),
-        scannedAt: audit.scannedAt
-      },
-      create: {
-        websiteId,
-        url: audit.url,
-        title: 'Website Audit',
-        seoScore: audit.currentState.seoScore,
-        issues: JSON.stringify({
-          technical: audit.currentState.technicalIssues,
-          content: audit.currentState.contentIssues,
-          performance: audit.currentState.performanceIssues,
-          mobile: audit.currentState.mobileIssues
-        }),
-        suggestions: JSON.stringify(audit.actionableItems),
-        scannedAt: audit.scannedAt
-      }
+    const existingAudit = db.queryFirst(
+      'SELECT id FROM PageAnalysis WHERE websiteId = ? AND url = ?',
+      [websiteId, audit.url]
+    )
+
+    const issuesJson = JSON.stringify({
+      technical: audit.currentState.technicalIssues,
+      content: audit.currentState.contentIssues,
+      performance: audit.currentState.performanceIssues,
+      mobile: audit.currentState.mobileIssues
     })
+    const suggestionsJson = JSON.stringify(audit.actionableItems)
+
+    let savedAudit: any
+    if (existingAudit) {
+      // Update existing audit
+      db.execute(`
+        UPDATE PageAnalysis 
+        SET title = ?, seoScore = ?, issues = ?, suggestions = ?, scannedAt = ?
+        WHERE id = ?
+      `, [
+        'Website Audit',
+        audit.currentState.seoScore,
+        issuesJson,
+        suggestionsJson,
+        audit.scannedAt.toISOString(),
+        existingAudit.id
+      ])
+      savedAudit = { id: existingAudit.id }
+    } else {
+      // Create new audit
+      const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      db.execute(`
+        INSERT INTO PageAnalysis (id, websiteId, url, title, seoScore, issues, suggestions, scannedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        auditId,
+        websiteId,
+        audit.url,
+        'Website Audit',
+        audit.currentState.seoScore,
+        issuesJson,
+        suggestionsJson,
+        audit.scannedAt.toISOString()
+      ])
+      savedAudit = { id: auditId }
+    }
     console.log('Audit saved, creating recommendations...')
 
     // Create SEO recommendations
@@ -89,20 +100,30 @@ export async function POST(request: NextRequest) {
 
     try {
       // Clear existing recommendations for this website
-      await prisma.seORecommendation.deleteMany({
-        where: { websiteId }
-      })
+      db.execute(
+        'DELETE FROM SEORecommendation WHERE websiteId = ?',
+        [websiteId]
+      )
       console.log('Cleared existing recommendations for website:', websiteId)
       
       // Create new recommendations
       console.log('Creating recommendations:', recommendations.length, 'items')
-      const createdRecommendations = await Promise.all(
-        recommendations.map(rec => 
-          prisma.seORecommendation.create({ data: rec })
-        )
-      )
-      console.log('Recommendations created successfully:', createdRecommendations.length, 'items')
-    } catch (recError) {
+      for (const rec of recommendations) {
+        const recId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        db.execute(`
+          INSERT INTO SEORecommendation (id, websiteId, type, priority, description, action, status, createdAt, updatedAt)
+          VALUES (?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
+        `, [
+          recId,
+          rec.websiteId,
+          rec.type,
+          rec.priority,
+          rec.description,
+          rec.action
+        ])
+      }
+      console.log('Recommendations created successfully:', recommendations.length, 'items')
+    } catch (recError: any) {
       console.error('Error creating recommendations:', recError)
       console.error('Error details:', {
         message: recError.message,
@@ -141,61 +162,53 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user ID from database using email
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')
 
-    // Build where clause - get all audits for user's websites
-    const where: any = {}
-    
     if (websiteId) {
       // If specific website requested, verify ownership
-      const website = await prisma.website.findFirst({
-        where: { 
-          id: websiteId,
-          userId: user.id 
-        }
-      })
+      const website = db.queryFirst(
+        'SELECT * FROM Website WHERE id = ? AND userId = ?',
+        [websiteId, session.user.id]
+      )
       if (!website) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
       }
-      where.websiteId = websiteId
-    } else {
-      // Get all audits for user's websites
-      const userWebsites = await prisma.website.findMany({
-        where: { userId: user.id },
-        select: { id: true }
-      })
-      where.websiteId = { in: userWebsites.map(w => w.id) }
     }
 
     // Get audit history with website info
-    const audits = await prisma.pageAnalysis.findMany({
-      where,
-      include: {
-        website: {
-          select: {
-            id: true,
-            name: true,
-            url: true
-          }
-        }
-      },
-      orderBy: { scannedAt: 'desc' }
-    })
+    let audits: any[]
+    if (websiteId) {
+      audits = db.query(`
+        SELECT p.*, w.name as website_name, w.url as website_url
+        FROM PageAnalysis p
+        LEFT JOIN Website w ON p.websiteId = w.id
+        WHERE p.websiteId = ?
+        ORDER BY p.scannedAt DESC
+      `, [websiteId])
+    } else {
+      audits = db.query(`
+        SELECT p.*, w.name as website_name, w.url as website_url
+        FROM PageAnalysis p
+        LEFT JOIN Website w ON p.websiteId = w.id
+        WHERE p.websiteId IN (SELECT id FROM Website WHERE userId = ?)
+        ORDER BY p.scannedAt DESC
+      `, [session.user.id])
+    }
+
+    // Format audits with website info
+    const formattedAudits = audits.map((audit: any) => ({
+      ...audit,
+      website: {
+        id: audit.websiteId,
+        name: audit.website_name,
+        url: audit.website_url
+      }
+    }))
 
     return NextResponse.json({ 
       success: true, 
-      audits 
+      audits: formattedAudits 
     })
 
   } catch (error) {
