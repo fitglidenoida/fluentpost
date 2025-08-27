@@ -17,19 +17,29 @@ const updateWebsiteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Website POST - Start')
+    
     const session = await getServerSession(authOptions) as any
+    console.log('Website POST - Session:', session?.user?.email, session?.user?.id)
+    
     if (!session?.user?.email) {
+      console.log('Website POST - No session/email')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
+    console.log('Website POST - Request body:', body)
+    
     const { name, url } = createWebsiteSchema.parse(body)
+    console.log('Website POST - Parsed data:', { name, url })
 
     // Check if website already exists for this user
+    console.log('Website POST - Checking existing website for user:', session.user.id)
     const existingWebsite = db.queryFirst(
       'SELECT id FROM Website WHERE url = ? AND userId = ?',
       [url, session.user.id]
     )
+    console.log('Website POST - Existing website check result:', existingWebsite)
 
     if (existingWebsite) {
       return NextResponse.json(
@@ -43,11 +53,15 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString()
 
     // Create new website
+    console.log('Website POST - Creating website with ID:', websiteId)
+    console.log('Website POST - Insert params:', [websiteId, name, url, session.user.id, 'active', now, now])
+    
     db.execute(
       `INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [websiteId, name, url, session.user.id, 'active', now, now]
     )
+    console.log('Website POST - Website created successfully')
 
     // Fetch the created website
     const website = db.queryFirst(
