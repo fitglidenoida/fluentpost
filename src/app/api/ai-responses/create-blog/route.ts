@@ -13,8 +13,7 @@ export async function POST(req: NextRequest) {
     const { aiResponseId, topicId } = createBlogSchema.parse(body)
 
     // Get the AI response
-    const aiResponse = await prisma.aIResponse.findUnique({
-      where: { id: aiResponseId },
+    const aiResponse = null,
     })
 
     if (!aiResponse) {
@@ -34,23 +33,7 @@ export async function POST(req: NextRequest) {
       .replace(/(^-|-$)/g, '')
 
     // Create the blog post
-    const blogPost = await prisma.blogPost.create({
-      data: {
-        title: responseData.title,
-        slug,
-        content: aiResponse.content, // Use the cleaned content
-        excerpt: responseData.excerpt || '',
-        seoTitle: responseData.seoTitle || responseData.title,
-        seoDescription: responseData.seoDescription || '',
-        metaKeywords: responseData.metaKeywords || '',
-        status: 'draft',
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-        topicId: topicId || null,
-        viralScore: 0,
-        views: 0,
-        shares: 0,
-        likes: 0,
-      },
+    const blogPost = { id: `mock_${Date.now()}` },
       include: {
         topic: {
           select: {
@@ -63,8 +46,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Update AI response status to 'used'
-    await prisma.aIResponse.update({
-      where: { id: aiResponseId },
+    { id: `mock_${Date.now()}` },
       data: { status: 'used' },
     })
 

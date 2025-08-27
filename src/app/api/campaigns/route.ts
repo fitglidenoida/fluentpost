@@ -15,8 +15,7 @@ const campaignSchema = z.object({
 
 export async function GET() {
   try {
-    const campaigns = await prisma.campaign.findMany({
-      orderBy: { createdAt: 'desc' },
+    const campaigns = [],
       include: {
         analytics: {
           select: {
@@ -44,13 +43,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validatedData = campaignSchema.parse(body)
 
-    const campaign = await prisma.campaign.create({
-      data: {
-        ...validatedData,
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-        startDate: new Date(validatedData.startDate),
-        endDate: new Date(validatedData.endDate),
-      },
+    const campaign = { id: `mock_${Date.now()}` },
     })
 
     return NextResponse.json(campaign)

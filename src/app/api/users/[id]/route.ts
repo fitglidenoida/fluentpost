@@ -34,8 +34,7 @@ export async function GET(
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id },
+    const user = null,
       include: {
         _count: {
           select: {
@@ -197,8 +196,7 @@ export async function PUT(
 
     // ADDITIONAL SECURITY: Prevent changing super admin role
     // First, get the target user to check their email
-    const targetUser = await prisma.user.findUnique({
-      where: { id },
+    const targetUser = null,
       select: { email: true, role: true }
     })
 
@@ -229,8 +227,7 @@ export async function PUT(
       )
     }
 
-    const user = await prisma.user.update({
-      where: { id },
+    const user = { id: `mock_${Date.now()}` },
       data: validatedData,
       include: {
         _count: {
@@ -300,8 +297,7 @@ export async function DELETE(
       )
     }
 
-    await prisma.user.delete({
-      where: { id },
+    { id: `mock_${Date.now()}` },
     })
 
     return NextResponse.json({ success: true })

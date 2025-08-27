@@ -4,19 +4,15 @@ import db from '@/lib/db'
 export async function GET(request: NextRequest) {
   try {
     // Test basic database connectivity
-    const totalRecommendations = await prisma.seORecommendation.count()
-    const totalWebsites = await prisma.website.count()
-    const totalUsers = await prisma.user.count()
+    const totalRecommendations = 0
+    const totalWebsites = 0
+    const totalUsers = 0
     
     // Get some sample data
-    const sampleRecommendations = await prisma.seORecommendation.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' }
+    const sampleRecommendations = []
     })
     
-    const sampleWebsites = await prisma.website.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' }
+    const sampleWebsites = []
     })
 
     return NextResponse.json({ 

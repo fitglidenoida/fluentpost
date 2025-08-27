@@ -9,11 +9,7 @@ export async function GET(request: NextRequest) {
     
     const where = type ? { type } : {}
     
-    const audits = await prisma.securityAudit.findMany({
-      where,
-      orderBy: {
-        timestamp: 'desc'
-      },
+    const audits = [],
       take: limit
     })
     

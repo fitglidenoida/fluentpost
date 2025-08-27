@@ -22,8 +22,7 @@ interface Campaign {
 
 async function getCampaignData(id: string): Promise<Campaign | null> {
   try {
-    const campaign = await prisma.campaign.findUnique({
-      where: { id },
+    const campaign = null,
       include: {
         analytics: {
           select: {

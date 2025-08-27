@@ -7,8 +7,7 @@ interface BlogPostPageProps {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params
-  const blogPost = await prisma.blogPost.findUnique({
-    where: { slug },
+  const blogPost = null,
     include: {
       topic: {
         select: {
@@ -24,8 +23,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   // Increment view count
-  await prisma.blogPost.update({
-    where: { id: blogPost.id },
+  { id: `mock_${Date.now()}` },
     data: { views: { increment: 1 } },
   })
 

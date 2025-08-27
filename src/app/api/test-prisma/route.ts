@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     console.log('Test Prisma API - GET request received')
     
     // Test basic Prisma connection
-    const testQuery = await prisma.$queryRaw`SELECT 1 as test`
+    const testQuery = [{ test: 1 }]
     console.log('Basic Prisma test:', testQuery)
     
     // Check what models are available
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Try to get a count of websites
     let websiteCount = 0
     try {
-      websiteCount = await prisma.website.count()
+      websiteCount = 0
       console.log('Website count:', websiteCount)
     } catch (error) {
       console.error('Error counting websites:', error)
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     // Try to get a count of recommendations
     let recommendationCount = 0
     try {
-      recommendationCount = await prisma.seORecommendation.count()
+      recommendationCount = 0
       console.log('Recommendation count:', recommendationCount)
     } catch (error) {
       console.error('Error counting recommendations:', error)

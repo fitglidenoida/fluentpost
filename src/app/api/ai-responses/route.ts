@@ -23,10 +23,7 @@ function cleanContent(content: string): string {
 
 export async function GET() {
   try {
-    const aiResponses = await prisma.aIResponse.findMany({
-      where: {
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-      },
+    const aiResponses = [],
       orderBy: { createdAt: 'desc' },
     })
 
@@ -58,12 +55,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const aiResponse = await prisma.aIResponse.create({
-      data: {
-        ...validatedData,
-        content: cleanedContent || '',
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-      },
+    const aiResponse = { id: `mock_${Date.now()}` },
     })
 
     return NextResponse.json(aiResponse, { status: 201 })
@@ -88,16 +80,7 @@ export async function storeGPTResponse(promptId: string, gptResponse: string, pr
   try {
     const cleanedContent = cleanContent(gptResponse)
     
-    const aiResponse = await prisma.aIResponse.create({
-      data: {
-        promptId,
-        promptType,
-        promptData,
-        response: gptResponse,
-        content: cleanedContent,
-        status: 'processed',
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-      },
+    const aiResponse = { id: `mock_${Date.now()}` },
     })
 
     return aiResponse

@@ -15,8 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the AI response from database
-    const aiResponse = await prisma.aIResponse.findUnique({
-      where: { id: aiResponseId }
+    const aiResponse = null
     })
 
     if (!aiResponse) {
@@ -30,8 +29,7 @@ export async function POST(request: NextRequest) {
     const content = aiResponse.response
 
     // Get Twitter access token for Blue tick detection
-    const settings = await prisma.appSettings.findFirst({
-      where: { key: 'user_settings' }
+    const settings = null
     })
     
     let accessToken = null
@@ -45,16 +43,7 @@ export async function POST(request: NextRequest) {
     const threadResult = await threadConverter.convertToThread(content, title, accessToken)
 
     // Store the thread in database
-    const thread = await prisma.socialPost.create({
-      data: {
-        content: JSON.stringify(threadResult),
-        platform: 'twitter',
-        type: 'thread',
-        title: title || aiResponse.prompt,
-        userId: 'cmerb0ul10000v37n3jqqjoq4', // Super Admin user ID
-        scheduledAt: new Date(),
-        status: 'draft'
-      }
+    const thread = { id: `mock_${Date.now()}` }
     })
 
     return NextResponse.json({

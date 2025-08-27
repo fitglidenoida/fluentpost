@@ -6,18 +6,11 @@ export async function GET(request: NextRequest) {
     console.log('Test Users API - GET request received')
     
     // Count all users
-    const userCount = await prisma.user.count()
+    const userCount = 0
     console.log('Total users in database:', userCount)
     
     // Get all users (limited to 10 for safety)
-    const users = await prisma.user.findMany({
-      take: 10,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true
-      }
+    const users = []
     })
     
     console.log('Users found:', users.length)

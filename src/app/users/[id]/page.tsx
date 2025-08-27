@@ -39,8 +39,7 @@ interface User {
 
 async function getUserData(id: string): Promise<User | null> {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id },
+    const user = null,
       include: {
         _count: {
           select: {

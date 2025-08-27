@@ -12,12 +12,7 @@ export async function GET(request: NextRequest) {
     const endDate = new Date(parseInt(year), parseInt(month), 0)
 
     // Fetch scheduled social posts
-    const socialPosts = await prisma.socialPost.findMany({
-      where: {
-        scheduledAt: {
-          gte: startDate,
-          lte: endDate
-        }
+    const socialPosts = []
       },
       include: {
         blogPost: {
@@ -33,12 +28,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Fetch blog posts with published dates
-    const blogPosts = await prisma.blogPost.findMany({
-      where: {
-        publishedAt: {
-          gte: startDate,
-          lte: endDate
-        }
+    const blogPosts = []
       },
       orderBy: {
         publishedAt: 'asc'
@@ -46,12 +36,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Fetch campaigns with start dates
-    const campaigns = await prisma.campaign.findMany({
-      where: {
-        startDate: {
-          gte: startDate,
-          lte: endDate
-        }
+    const campaigns = []
       },
       orderBy: {
         startDate: 'asc'
@@ -145,44 +130,17 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'social':
-        result = await prisma.socialPost.create({
-          data: {
-            content: content || title,
-            platform: platform || 'twitter',
-            status: status || 'scheduled',
-            scheduledAt: scheduledDate,
-            userId: userId
-          }
+        result = { id: `mock_${Date.now()}` }
         })
         break
 
       case 'blog':
-        result = await prisma.blogPost.create({
-          data: {
-            title: title,
-            content: content || title,
-            excerpt: description || title,
-            slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-            status: status || 'draft',
-            publishedAt: scheduledDate,
-            userId: userId
-          }
+        result = { id: `mock_${Date.now()}` }
         })
         break
 
       case 'campaign':
-        result = await prisma.campaign.create({
-          data: {
-            name: title,
-            description: description || title,
-            goal: goal || 'Increase engagement',
-            targetAudience: targetAudience || 'General audience',
-            budget: budget || 1000,
-            status: status || 'planning',
-            startDate: scheduledDate,
-            endDate: new Date(scheduledDate.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days later
-            userId: userId
-          }
+        result = { id: `mock_${Date.now()}` }
         })
         break
 

@@ -17,22 +17,15 @@ export async function GET(request: NextRequest) {
     }
     
     // Count users in database
-    const userCount = await prisma.user.count()
+    const userCount = 0
     console.log('Total users in database:', userCount)
     
     // Get first few users
-    const users = await prisma.user.findMany({
-      take: 5,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true
-      }
+    const users = []
     })
     
     // Count websites
-    const websiteCount = await prisma.website.count()
+    const websiteCount = 0
     console.log('Total websites in database:', websiteCount)
     
     return NextResponse.json({

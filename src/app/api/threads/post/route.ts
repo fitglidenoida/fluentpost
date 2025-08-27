@@ -15,8 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the thread from database
-    const thread = await prisma.socialPost.findUnique({
-      where: { id: threadId }
+    const thread = null
     })
 
     if (!thread) {
@@ -122,8 +121,7 @@ export async function POST(request: NextRequest) {
     const status = successCount === tweets.length ? 'posted' : 
                    successCount > 0 ? 'partial' : 'failed'
 
-    await prisma.socialPost.update({
-      where: { id: threadId },
+    { id: `mock_${Date.now()}` },
       data: {
         status,
         postedAt: new Date(),
