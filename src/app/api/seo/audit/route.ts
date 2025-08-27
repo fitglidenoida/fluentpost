@@ -6,8 +6,7 @@ import db from '@/lib/db'
 import { z } from 'zod'
 
 const auditWebsiteSchema = z.object({
-  websiteId: z.string(),
-  url: z.string().url()
+  websiteId: z.string()
 })
 
 export async function POST(request: NextRequest) {
@@ -18,9 +17,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { websiteId, url } = auditWebsiteSchema.parse(body)
+    const { websiteId } = auditWebsiteSchema.parse(body)
 
-    // Verify website ownership
+    // Verify website ownership and get the URL
     const website = db.queryFirst(
       'SELECT * FROM Website WHERE id = ? AND userId = ?',
       [websiteId, session.user.id]
@@ -29,6 +28,8 @@ export async function POST(request: NextRequest) {
     if (!website) {
       return NextResponse.json({ error: 'Website not found' }, { status: 404 })
     }
+
+    const url = website.url
 
     // Perform comprehensive audit
     console.log('Starting website audit for:', url)
