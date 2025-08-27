@@ -74,10 +74,27 @@ export async function POST(request: NextRequest) {
       website 
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create website error:', error)
+    console.error('Error name:', error.name)
+    console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
+    
+    // Handle different types of errors
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Invalid input data', details: error.errors }, 
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create website' }, 
+      { 
+        error: 'Failed to create website', 
+        details: error.message,
+        type: error.name,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }, 
       { status: 500 }
     )
   }
