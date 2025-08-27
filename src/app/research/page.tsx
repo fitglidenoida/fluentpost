@@ -164,8 +164,8 @@ export default function ResearchHub() {
         keywordResearch.domain,
         keywordResearch.seedKeywords.filter(k => k.trim())
       )
-      setKeywordResearch(prev => ({ ...prev, keywords: data.keywords }))
-      alert(`Found ${data.total} keywords!`)
+      setKeywordResearch(prev => ({ ...prev, keywords: data.data.keywords }))
+      alert(`Found ${data.data.total} keywords!`)
     } catch (error) {
       console.error('Error researching keywords:', error)
       alert('Error researching keywords')
@@ -211,7 +211,7 @@ export default function ResearchHub() {
     setIsAuditing(true)
     try {
       const data = await api.seo.audit(selectedWebsiteForAudit.id)
-      setAuditResults(data.audit)
+      setAuditResults(data.data.audit)
       // Refresh audit history and recommendations
       fetchAuditHistory()
       fetchRecommendations()
@@ -230,8 +230,8 @@ export default function ResearchHub() {
       console.log('Fetching recommendations...')
       const data = await api.seo.getRecommendations()
       console.log('Recommendations response:', data)
-      console.log('Recommendations count:', data.recommendations?.length || 0)
-      setRecommendations(data.recommendations || [])
+      console.log('Recommendations count:', data.data.recommendations?.length || 0)
+      setRecommendations(data.data.recommendations || [])
     } catch (error) {
       console.error('Error fetching recommendations:', error)
     } finally {
@@ -253,7 +253,7 @@ export default function ResearchHub() {
     setIsLoadingAuditHistory(true)
     try {
       const data = await api.seo.getAuditHistory()
-      setAuditHistory(data.audits || [])
+      setAuditHistory(data.data.audits || [])
     } catch (error) {
       console.error('Error fetching audit history:', error)
     } finally {
@@ -589,7 +589,9 @@ export default function ResearchHub() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {console.log('Website Management - Websites to render:', websites) || websites.map((website: any) => (
+                {(() => {
+                  console.log('Website Management - Websites to render:', websites)
+                  return websites.map((website: any) => (
                   <div key={website.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
                     <p className="text-sm text-gray-600 mb-3">{website.url}</p>
@@ -605,7 +607,8 @@ export default function ResearchHub() {
                       🔍 Run SEO Audit
                     </button>
                   </div>
-                ))}
+                ))
+                })()}
               </div>
             </div>
 
@@ -1344,12 +1347,12 @@ export default function ResearchHub() {
                             auditResults: auditResults
                           })
                           
-                          if (response.success) {
+                          if (response.data.success) {
                             alert('Recommendations generated successfully! Check the Recommendations tab.')
                             // Refresh recommendations
                             await fetchRecommendations()
                           } else {
-                            alert('Failed to generate recommendations: ' + response.error)
+                            alert('Failed to generate recommendations: ' + response.data.error)
                           }
                         } catch (error) {
                           console.error('Error generating recommendations:', error)
