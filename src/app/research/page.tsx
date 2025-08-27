@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useAppStore } from '@/lib/store'
 import { CostFreeAIService } from '@/lib/ai'
 import { api } from '@/lib/apiClient'
+import AutomationPanel from '@/components/seo/AutomationPanel'
+import AutomationDashboard from '@/components/seo/AutomationDashboard'
 
 export default function ResearchHub() {
   const { content, isLoading, error, fetchTopics, createTopic } = useAppStore()
@@ -134,7 +136,7 @@ export default function ResearchHub() {
   const createWebsite = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await api.websites.create(newWebsite.name, newWebsite.url)
+      await api.websites.create(newWebsite)
       setShowWebsiteForm(false)
       setNewWebsite({ name: '', url: '' })
       fetchWebsites()
@@ -265,8 +267,15 @@ export default function ResearchHub() {
       fetchAuditHistory()
     } else if (activeTab === 'recommendations') {
       fetchRecommendations()
+    } else if (activeTab === 'automation') {
+      fetchWebsites()
+      fetchRecommendations()
+      // Auto-select first website if none is selected
+      if (!selectedWebsiteForAudit && websites.length > 0) {
+        setSelectedWebsiteForAudit(websites[0])
+      }
     }
-  }, [activeTab])
+  }, [activeTab, websites.length, selectedWebsiteForAudit])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -444,6 +453,16 @@ export default function ResearchHub() {
               }`}
             >
               💡 Recommendations
+            </button>
+            <button
+              onClick={() => setActiveTab('automation')}
+              className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'automation'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              ⚙️ Automation
             </button>
           </div>
         </div>
@@ -900,6 +919,8 @@ export default function ResearchHub() {
                           <div className="text-xs text-gray-600">
                             {typeof audit.issues === 'string' ? 
                               JSON.parse(audit.issues).technical?.length || 0 + 
+
+
                               JSON.parse(audit.issues).content?.length || 0 + 
                               JSON.parse(audit.issues).performance?.length || 0 + 
                               JSON.parse(audit.issues).mobile?.length || 0 : 0} total issues
@@ -921,164 +942,16 @@ export default function ResearchHub() {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">SEO Recommendations</h2>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={async () => {
-                      console.log('Testing fetch...')
-                      const data = await api.test.fetch()
-                      console.log('Test fetch result:', data)
-                    }}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                  >
-                    Test Fetch
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      console.log('Testing SEO API...')
-                      const data = await api.test.seo()
-                      console.log('SEO Test result:', data)
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Test SEO
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      console.log('Testing Recommendations...')
-                      const data = await api.test.recommendations()
-                      console.log('Recommendations Test result:', data)
-                    }}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Test Recs
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-prisma')
-                        const result = await response.json()
-                        console.log('Test Prisma result:', result)
-                        alert(`Prisma Test: ${result.prismaWorking ? 'Working' : 'Failed'}\nModels: ${result.availableModels?.join(', ')}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test Prisma error:', error)
-                        alert('Prisma test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                  >
-                    Test Prisma
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-db')
-                        const result = await response.json()
-                        console.log('Test DB result:', result)
-                        alert(`DB Test: ${result.dbWorking ? 'Working' : 'Failed'}\nTables: ${result.results?.tables?.map((t: any) => t.name).join(', ')}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test DB error:', error)
-                        alert('DB test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    Test DB
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-user')
-                        const result = await response.json()
-                        console.log('Test User result:', result)
-                        alert(`User Test: ${result.success ? 'Success' : 'Failed'}\nSession: ${result.session?.exists ? 'Yes' : 'No'}\nUsers: ${result.database?.userCount}\nWebsites: ${result.database?.websiteCount}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test User error:', error)
-                        alert('User test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    Test User
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-users')
-                        const result = await response.json()
-                        console.log('Test Users result:', result)
-                        alert(`Users Test: ${result.success ? 'Success' : 'Failed'}\nTotal Users: ${result.userCount}\nUser Emails: ${result.users?.map((u: any) => u.email).join(', ')}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test Users error:', error)
-                        alert('Users test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    Test Users
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/auth/emergency-create', { method: 'POST' })
-                        const result = await response.json()
-                        console.log('Emergency create result:', result)
-                        if (result.success) {
-                          alert(`EMERGENCY FIX: ${result.message}\n\nLogin Credentials:\nEmail: ${result.credentials?.email}\nPassword: ${result.credentials?.password}\n\nUse these to sign in!`)
-                        } else {
-                          alert(`Emergency create failed: ${result.error}`)
-                        }
-                      } catch (error) {
-                        console.error('Emergency create error:', error)
-                        alert('Emergency create failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
-                  >
-                    🚨 EMERGENCY FIX
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-seo')
-                        const result = await response.json()
-                        console.log('Test SEO result:', result)
-                        alert(`SEO Test: ${result.success ? 'Success' : 'Failed'}\nDB Connection: ${result.results?.dbConnection}\nSEO Tables: ${JSON.stringify(result.results?.seoTables)}\nPrisma Client: ${JSON.stringify(result.results?.prismaClient)}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test SEO error:', error)
-                        alert('SEO test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Test SEO
-                  </button>
-                  <button 
-                    onClick={fetchRecommendations}
-                    disabled={isLoadingRecommendations}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/test-raw-sql')
-                        const result = await response.json()
-                        console.log('Test Raw SQL result:', result)
-                        alert(`Raw SQL Test: ${result.success ? 'Success' : 'Failed'}\nBasic SQL: ${result.results?.basicSQL}\nSEO Tables: ${JSON.stringify(result.results?.seoTables)}\nRecommendation Count: ${JSON.stringify(result.results?.recommendationCount)}\nWebsite Count: ${JSON.stringify(result.results?.websiteCount)}\nCheck console for details.`)
-                      } catch (error) {
-                        console.error('Test Raw SQL error:', error)
-                        alert('Raw SQL test failed! Check console for details.')
-                      }
-                    }}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-                  >
-                    Test Raw SQL
-                  </button>
-                </div>
+                <button 
+                  onClick={fetchRecommendations}
+                  disabled={isLoadingRecommendations}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
               </div>
               
               {isLoadingRecommendations ? (
@@ -1163,6 +1036,75 @@ export default function ResearchHub() {
                     </div>
                     <div className="text-sm text-gray-600">Pending</div>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Automation Content */}
+        {activeTab === 'automation' && (
+          <div className="space-y-8">
+            {/* Website Selector */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Select Website</h3>
+                <button
+                  onClick={() => setShowWebsiteForm(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Website
+                </button>
+              </div>
+              
+              {websites.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {websites.map((website: any) => (
+                    <div
+                      key={website.id}
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        selectedWebsiteForAudit?.id === website.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => setSelectedWebsiteForAudit(website)}
+                    >
+                      <h4 className="font-medium text-gray-900">{website.name}</h4>
+                      <p className="text-sm text-gray-600">{website.url}</p>
+                      {selectedWebsiteForAudit?.id === website.id && (
+                        <div className="mt-2 text-sm text-blue-600">✓ Selected</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No websites found. Add a website to get started.</p>
+                  <button
+                    onClick={() => setShowWebsiteForm(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add Your First Website
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {selectedWebsiteForAudit ? (
+              <>
+                <AutomationPanel 
+                  recommendations={recommendations} 
+                  websiteId={selectedWebsiteForAudit.id} 
+                />
+                <AutomationDashboard websiteId={selectedWebsiteForAudit.id} />
+              </>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="text-center py-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">No Website Selected</h3>
+                  <p className="text-gray-500 mb-4">
+                    Please select a website above to use automation features.
+                  </p>
                 </div>
               </div>
             )}
