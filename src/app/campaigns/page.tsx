@@ -452,7 +452,7 @@ export default function CampaignsHub() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Primary Goal *</label>
-                    <select 
+                                        <select
                       value={newCampaign.goal || ''}
                       onChange={(e) => setNewCampaign({...newCampaign, goal: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -461,6 +461,7 @@ export default function CampaignsHub() {
                       <option value="Brand Awareness">Brand Awareness</option>
                       <option value="Lead Generation">Lead Generation</option>
                       <option value="Sales Conversion">Sales Conversion</option>
+                      <option value="Mobile App Downloads">📱 Mobile App Downloads</option>
                       <option value="Community Building">Community Building</option>
                       <option value="Content Education">Content Education</option>
                     </select>

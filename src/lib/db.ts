@@ -518,6 +518,66 @@ const initializeFitGlideData = () => {
         ]),
         'active'
       ]);
+
+      // Create a mobile app downloads campaign
+      dbHelpers.execute(`
+        INSERT INTO Campaign (
+          id, userId, name, description, goal, objectives, targetAudience, 
+          budget, duration, startDate, endDate, contentPillars, keywords, 
+          contentTypes, platforms, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [
+        'fitglide-mobile-2024',
+        'fitglide-user',
+        'FitGlide Mobile App Launch Campaign',
+        'Drive downloads and user acquisition for the FitGlide mobile app across all fitness demographics',
+        'Mobile App Downloads',
+        JSON.stringify([
+          'Achieve 10,000 app downloads in first quarter',
+          'Reach 50% user retention rate after 30 days',
+          'Generate 500 app store reviews with 4.5+ rating',
+          'Convert 20% of free users to premium subscriptions'
+        ]),
+        'Fitness enthusiasts, personal trainers, and gym-goers who want workout tracking and fitness content on mobile',
+        5000,
+        '6 months',
+        '2024-01-15',
+        '2024-07-15',
+        JSON.stringify([
+          'Mobile Workouts',
+          'App Features Demo',
+          'User Success Stories',
+          'Fitness Challenges',
+          'Premium Benefits'
+        ]),
+        JSON.stringify([
+          'fitness app',
+          'workout tracker',
+          'mobile fitness',
+          'personal trainer app',
+          'gym workout app',
+          'fitness tracking',
+          'mobile workout plans'
+        ]),
+        JSON.stringify([
+          'App Store Screenshots',
+          'Demo Videos',
+          'User Testimonials',
+          'Social Media Posts',
+          'Influencer Content',
+          'App Tutorial Videos'
+        ]),
+        JSON.stringify([
+          'Instagram',
+          'TikTok',
+          'YouTube',
+          'Facebook',
+          'App Store',
+          'Google Play Store',
+          'Fitness Forums'
+        ]),
+        'planning'
+      ]);
     }
     
     console.log('FitGlide-specific data initialized successfully!');
