@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 
 interface User {
   id: string
@@ -25,8 +23,6 @@ interface User {
 }
 
 export default function Users() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [users, setUsers] = useState<User[]>([])
@@ -34,19 +30,7 @@ export default function Users() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check authentication and role
-    if (status === 'loading') return
-    
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin')
-      return
-    }
-
-    // If user is not admin, redirect to their own profile
-    if (session?.user?.role !== 'admin') {
-      router.push(`/users/${session?.user?.id}`)
-      return
-    }
+    // For FitGlide personal tool - always fetch users (ready for future multi-user access)
 
     const fetchUsers = async () => {
       try {
@@ -72,7 +56,7 @@ export default function Users() {
     }
 
     fetchUsers()
-  }, [searchTerm, selectedStatus, session, status, router])
+  }, [searchTerm, selectedStatus])
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,7 +66,7 @@ export default function Users() {
   })
 
   // Show loading state
-  if (status === 'loading' || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -237,8 +221,8 @@ export default function Users() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Users</h1>
-            <p className="text-gray-600 text-lg">Manage and analyze your user base</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">FitGlide Users</h1>
+            <p className="text-gray-600 text-lg">Manage FitGlide users (ready for future multi-user access) 👥</p>
           </div>
           <div className="flex gap-4">
             <button className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 font-medium">

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
-import db from '@/lib/db'
+import { dbHelpers } from '@/lib/db'
 import { z } from 'zod'
+
+// FitGlide constants - no multi-tenant complexity
+const FITGLIDE_WEBSITE_ID = 'fitglide-main'
+const FITGLIDE_USER_ID = 'fitglide-user'
 
 const createWebsiteSchema = z.object({
   name: z.string().min(1).max(100),
@@ -17,56 +19,43 @@ const updateWebsiteSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Website POST - Start')
+    console.log('FitGlide Website POST - Start')
     
-    const session = await getServerSession(authOptions) as any
-    console.log('Website POST - Session:', session?.user?.email, session?.user?.id)
-    
-    if (!session?.user?.email) {
-      console.log('Website POST - No session/email')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
-    console.log('Website POST - Request body:', body)
+    console.log('FitGlide Website POST - Request body:', body)
     
     const { name, url } = createWebsiteSchema.parse(body)
-    console.log('Website POST - Parsed data:', { name, url })
+    console.log('FitGlide Website POST - Parsed data:', { name, url })
 
-    // Check if website already exists for this user
-    console.log('Website POST - Checking existing website for user:', session.user.id)
-    const existingWebsite = db.queryFirst(
-      'SELECT id FROM Website WHERE url = ? AND userId = ?',
-      [url, session.user.id]
+    // Check if FitGlide website already exists
+    console.log('FitGlide Website POST - Checking existing FitGlide website')
+    const existingWebsite = dbHelpers.queryFirst(
+      'SELECT id FROM Website WHERE id = ?',
+      [FITGLIDE_WEBSITE_ID]
     )
-    console.log('Website POST - Existing website check result:', existingWebsite)
+    console.log('FitGlide Website POST - Existing website check result:', existingWebsite)
 
     if (existingWebsite) {
       return NextResponse.json(
-        { error: 'Website already exists' }, 
+        { error: 'FitGlide website already exists' }, 
         { status: 400 }
       )
     }
 
-    // Generate unique ID
-    const websiteId = `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const now = new Date().toISOString()
-
-    // Create new website
-    console.log('Website POST - Creating website with ID:', websiteId)
-    console.log('Website POST - Insert params:', [websiteId, name, url, session.user.id, 'active', now, now])
+    // Create FitGlide website
+    console.log('FitGlide Website POST - Creating FitGlide website')
     
-    db.execute(
+    dbHelpers.execute(
       `INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [websiteId, name, url, session.user.id, 'active', now, now]
+       VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      [FITGLIDE_WEBSITE_ID, name, url, FITGLIDE_USER_ID, 'active']
     )
-    console.log('Website POST - Website created successfully')
+    console.log('FitGlide Website POST - FitGlide website created successfully')
 
     // Fetch the created website
-    const website = db.queryFirst(
+    const website = dbHelpers.queryFirst(
       'SELECT * FROM Website WHERE id = ?',
-      [websiteId]
+      [FITGLIDE_WEBSITE_ID]
     )
 
     return NextResponse.json({ 
@@ -102,17 +91,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    console.log('FitGlide Website GET - Start')
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
 
-    // Build SQL query with optional status filter
+    // Build SQL query with optional status filter for FitGlide
     let query = 'SELECT * FROM Website WHERE userId = ?'
-    const params = [session.user.id]
+    const params = [FITGLIDE_USER_ID]
     
     if (status) {
       query += ' AND status = ?'
@@ -121,8 +107,8 @@ export async function GET(request: NextRequest) {
     
     query += ' ORDER BY createdAt DESC'
 
-    // Get websites
-    const websites = db.query(query, params)
+    // Get FitGlide websites
+    const websites = dbHelpers.query(query, params)
 
     return NextResponse.json({ 
       success: true, 
@@ -140,22 +126,24 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    console.log('FitGlide Website PUT - Start')
 
     const body = await request.json()
     const { id, ...updateData } = updateWebsiteSchema.parse(body)
 
-    // Verify website ownership
-    const website = db.queryFirst(
-      'SELECT * FROM Website WHERE id = ? AND userId = ?',
-      [id, session.user.id]
+    // Only allow updating FitGlide website
+    if (id !== FITGLIDE_WEBSITE_ID) {
+      return NextResponse.json({ error: 'Can only update FitGlide website' }, { status: 403 })
+    }
+
+    // Verify FitGlide website exists
+    const website = dbHelpers.queryFirst(
+      'SELECT * FROM Website WHERE id = ?',
+      [FITGLIDE_WEBSITE_ID]
     )
 
     if (!website) {
-      return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+      return NextResponse.json({ error: 'FitGlide website not found' }, { status: 404 })
     }
 
     // Build update query dynamically
@@ -172,18 +160,17 @@ export async function PUT(request: NextRequest) {
       params.push(updateData.status)
     }
     
-    setClause.push('updatedAt = ?')
-    params.push(new Date().toISOString())
+    setClause.push('updatedAt = datetime(\'now\')')
     params.push(id)
 
     // Update website
-    db.execute(
+    dbHelpers.execute(
       `UPDATE Website SET ${setClause.join(', ')} WHERE id = ?`,
       params
     )
 
     // Fetch updated website
-    const updatedWebsite = db.queryFirst(
+    const updatedWebsite = dbHelpers.queryFirst(
       'SELECT * FROM Website WHERE id = ?',
       [id]
     )
@@ -204,10 +191,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    console.log('FitGlide Website DELETE - Start')
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
@@ -216,18 +200,23 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Website ID required' }, { status: 400 })
     }
 
-    // Verify website ownership
-    const website = db.queryFirst(
-      'SELECT * FROM Website WHERE id = ? AND userId = ?',
-      [id, session.user.id]
+    // Only allow deleting FitGlide website
+    if (id !== FITGLIDE_WEBSITE_ID) {
+      return NextResponse.json({ error: 'Can only delete FitGlide website' }, { status: 403 })
+    }
+
+    // Verify FitGlide website exists
+    const website = dbHelpers.queryFirst(
+      'SELECT * FROM Website WHERE id = ?',
+      [FITGLIDE_WEBSITE_ID]
     )
 
     if (!website) {
-      return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+      return NextResponse.json({ error: 'FitGlide website not found' }, { status: 404 })
     }
 
-    // Delete website (foreign key constraints will handle related data)
-    db.execute('DELETE FROM Website WHERE id = ?', [id])
+    // Delete FitGlide website (foreign key constraints will handle related data)
+    dbHelpers.execute('DELETE FROM Website WHERE id = ?', [id])
 
     return NextResponse.json({ 
       success: true, 

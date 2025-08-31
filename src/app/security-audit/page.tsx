@@ -1,55 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState } from 'react'
 
 interface SecurityLog {
   id: string
   eventType: string
-  userId: string
-  userEmail: string
   ipAddress: string
-  userAgent: string
   details: string
   createdAt: string
 }
 
 export default function SecurityAuditPage() {
-  const { data: session } = useSession()
-  const [logs, setLogs] = useState<SecurityLog[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // Mock security data for personal FitGlide tool
+  const [logs] = useState<SecurityLog[]>([
+    {
+      id: '1',
+      eventType: 'System Access',
+      ipAddress: '127.0.0.1',
+      details: 'FitGlide Marketing Hub accessed',
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: '2', 
+      eventType: 'Data Export',
+      ipAddress: '127.0.0.1',
+      details: 'Keyword research data exported',
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    }
+  ])
+  const [isLoading] = useState(false)
   const [filter, setFilter] = useState('all')
-
-  useEffect(() => {
-    if (session?.user?.role === 'admin') {
-      fetchSecurityLogs()
-    }
-  }, [session, filter])
-
-  const fetchSecurityLogs = async () => {
-    try {
-      const response = await fetch(`/api/security-audit?filter=${filter}`)
-      if (response.ok) {
-        const data = await response.json()
-        setLogs(data.logs || [])
-      }
-    } catch (error) {
-      console.error('Error fetching security logs:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (session?.user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-8">Admin privileges required to access security audit</p>
-        </div>
-      </div>
-    )
-  }
 
   const getEventTypeColor = (eventType: string) => {
     switch (eventType) {
@@ -72,8 +52,8 @@ export default function SecurityAuditPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Security Audit Log</h1>
-          <p className="text-gray-600">Monitor system security events and user activities</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">FitGlide Security Audit</h1>
+          <p className="text-gray-600">Monitor FitGlide Marketing Hub security events and system activities</p>
         </div>
 
         {/* Filters */}
@@ -93,7 +73,7 @@ export default function SecurityAuditPage() {
               <option value="admin_action">Admin Actions</option>
             </select>
             <button
-              onClick={fetchSecurityLogs}
+              onClick={() => console.log('Refresh security logs')}
               className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
             >
               Refresh

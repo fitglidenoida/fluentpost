@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import FacebookSDK from '@/components/FacebookSDK';
-import { SessionProvider } from '@/components/SessionProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FitGlide Marketing Tool",
-  description: "AI-powered marketing tool for viral content creation and user acquisition",
+  title: "FitGlide Marketing Hub",
+  description: "Personal SEO & SMO powerhouse for fitness content domination",
 };
 
 export default function RootLayout({
@@ -29,10 +28,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>
-          <FacebookSDK appId={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || ''} />
-          {children}
-        </SessionProvider>
+        <FacebookSDK appId={process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || ''} />
+        {children}
       </body>
     </html>
   );

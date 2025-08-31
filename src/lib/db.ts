@@ -350,6 +350,9 @@ export const initializeDatabase = () => {
           dbHelpers.execute(statement.trim());
         }
       });
+      
+      // Initialize FitGlide-specific data
+      initializeFitGlideData();
     });
     
     isInitialized = true;
@@ -362,6 +365,81 @@ export const initializeDatabase = () => {
       console.error('Database initialization error:', error);
       throw error;
     }
+  }
+};
+
+// Initialize FitGlide-specific data
+const initializeFitGlideData = () => {
+  console.log('Initializing FitGlide-specific data...');
+  
+  // Check if FitGlide user already exists
+  const existingUser = dbHelpers.queryFirst(
+    'SELECT * FROM User WHERE id = ?',
+    ['fitglide-user']
+  );
+  
+  if (!existingUser) {
+    // Create FitGlide user first
+    dbHelpers.execute(`
+      INSERT INTO User (id, name, email, password, role, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `, ['fitglide-user', 'FitGlide Admin', 'admin@fitglide.com', 'fitglide123', 'admin']);
+  }
+  
+  // Check if FitGlide website already exists
+  const existingWebsite = dbHelpers.queryFirst(
+    'SELECT * FROM Website WHERE url = ?',
+    ['https://fitglide.com']
+  );
+  
+  if (!existingWebsite) {
+    // Create FitGlide website entry
+    const websiteId = 'fitglide-main';
+    dbHelpers.execute(`
+      INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `, [websiteId, 'FitGlide', 'https://fitglide.com', 'fitglide-user', 'active']);
+    
+    // Pre-populate fitness keyword categories
+    const fitnessCategories = [
+      { id: 'weight-loss', name: 'Weight Loss', description: 'Keywords related to weight loss, fat burning, and body transformation' },
+      { id: 'muscle-building', name: 'Muscle Building', description: 'Keywords for strength training, muscle gain, and bodybuilding' },
+      { id: 'cardio-fitness', name: 'Cardio & Fitness', description: 'Cardiovascular exercises, HIIT, and general fitness' },
+      { id: 'nutrition', name: 'Nutrition & Diet', description: 'Healthy eating, meal planning, and dietary advice' },
+      { id: 'wellness', name: 'Wellness & Recovery', description: 'Mental health, recovery, sleep, and overall wellness' },
+      { id: 'equipment', name: 'Fitness Equipment', description: 'Home gym equipment, workout gear, and fitness tools' }
+    ];
+    
+    fitnessCategories.forEach(category => {
+      dbHelpers.execute(`
+        INSERT OR IGNORE INTO TopicCategories (id, websiteId, name, description, color, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [category.id, websiteId, category.name, category.description, '#10B981']);
+    });
+    
+    // Pre-populate some fitness keywords
+    const fitnessKeywords = [
+      { keyword: 'weight loss', searchVolume: 165000, difficulty: 75, intent: 'informational' },
+      { keyword: 'HIIT workout', searchVolume: 40500, difficulty: 65, intent: 'informational' },
+      { keyword: 'home gym', searchVolume: 33100, difficulty: 70, intent: 'commercial' },
+      { keyword: 'protein powder', searchVolume: 246000, difficulty: 80, intent: 'commercial' },
+      { keyword: 'muscle building', searchVolume: 18100, difficulty: 68, intent: 'informational' },
+      { keyword: 'cardio exercises', searchVolume: 27100, difficulty: 62, intent: 'informational' },
+      { keyword: 'healthy recipes', searchVolume: 135000, difficulty: 72, intent: 'informational' },
+      { keyword: 'fitness tracker', searchVolume: 60500, difficulty: 75, intent: 'commercial' },
+      { keyword: 'yoga for beginners', searchVolume: 49500, difficulty: 58, intent: 'informational' },
+      { keyword: 'meal prep', searchVolume: 90500, difficulty: 65, intent: 'informational' }
+    ];
+    
+    fitnessKeywords.forEach(kw => {
+      const keywordId = `kw_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      dbHelpers.execute(`
+        INSERT OR IGNORE INTO Keywords (id, websiteId, keyword, searchVolume, difficulty, competition, intent, status, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [keywordId, websiteId, kw.keyword, kw.searchVolume, kw.difficulty, 60, kw.intent, 'active']);
+    });
+    
+    console.log('FitGlide-specific data initialized successfully!');
   }
 };
 

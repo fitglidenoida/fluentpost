@@ -2,12 +2,10 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
 import { useAppStore } from '@/lib/store'
 import { formatNumber } from '@/lib/utils'
 
 export default function Home() {
-  const { data: session, status } = useSession()
   const { 
     analytics, 
     isLoading, 
@@ -18,47 +16,18 @@ export default function Home() {
   } = useAppStore()
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      fetchAnalytics()
-      fetchTopics()
-      fetchBlogPosts()
-    }
-  }, [status, fetchAnalytics, fetchTopics, fetchBlogPosts])
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to FitGlide</h1>
-          <p className="text-gray-600 mb-8">Please sign in to access your marketing dashboard</p>
-          <Link 
-            href="/auth/signin"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Sign In
-          </Link>
-        </div>
-      </div>
-    )
-  }
+    // Always fetch data since this is a personal tool
+    fetchAnalytics()
+    fetchTopics()
+    fetchBlogPosts()
+  }, [fetchAnalytics, fetchTopics, fetchBlogPosts])
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <p className="text-gray-600">Loading FitGlide dashboard...</p>
         </div>
       </div>
     )
@@ -130,21 +99,7 @@ export default function Home() {
               </svg>
               Campaigns
             </Link>
-            {session?.user?.role === 'admin' ? (
-              <Link href="/users" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                Users
-              </Link>
-            ) : (
-              <Link href={`/users/${session?.user?.id}`} className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                My Profile
-              </Link>
-            )}
+
             <Link href="/calendar" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -158,55 +113,18 @@ export default function Home() {
               </svg>
               Settings
             </Link>
-            {session?.user?.role === 'admin' && (
-              <Link href="/admin" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                Admin Panel
-              </Link>
-            )}
+
 
           </nav>
         </div>
 
-        {/* User Profile */}
+        {/* FitGlide Branding */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {session?.user?.name?.charAt(0) || 'U'}
-                </span>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{session?.user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{session?.user?.role || 'User'}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              title="Sign out"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Personal SEO/SMO Tool</div>
+            <div className="text-sm font-medium text-gray-900">FitGlide Marketing Hub</div>
+            <div className="text-xs text-green-600 mt-1">🚀 Boost Your Fitness Content</div>
           </div>
-        </div>
-
-        {/* AI Admin Panel Link */}
-        <div className="absolute bottom-20 left-0 right-0 p-6">
-          <Link 
-            href="/admin" 
-            className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
-          >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            AI Admin Panel
-          </Link>
         </div>
       </div>
 
@@ -215,8 +133,8 @@ export default function Home() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-            <p className="text-gray-600 text-lg">Welcome back! Here's what's happening with your marketing campaigns.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">FitGlide Marketing Dashboard</h1>
+            <p className="text-gray-600 text-lg">Your personal SEO & SMO powerhouse for fitness content domination! 💪</p>
           </div>
           <div className="flex items-center gap-4">
             <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
