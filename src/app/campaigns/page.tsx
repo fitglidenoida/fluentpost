@@ -47,63 +47,23 @@ export default function CampaignsHub() {
   })
 
   useEffect(() => {
-    // Initialize with sample FitGlide campaigns
-    setCampaigns([
-      {
-        id: 'fitglide-q1-2024',
-        name: 'FitGlide Q1 2024 Brand Awareness',
-        description: 'Build brand awareness and establish FitGlide as the go-to fitness content hub',
-        status: 'active',
-        goal: 'Brand Awareness & Lead Generation',
-        objectives: [
-          'Increase brand mentions by 200%',
-          'Generate 1000 qualified leads',
-          'Achieve 50K monthly website visitors',
-          'Build email list to 5000 subscribers'
-        ],
-        targetAudience: 'Fitness enthusiasts aged 25-45, seeking effective home workout solutions',
-        budget: 0, // Free tools only
-        duration: '3 months',
-        startDate: '2024-01-01',
-        endDate: '2024-03-31',
-        contentPillars: [
-          'Home Workouts',
-          'Nutrition Tips',
-          'Fitness Motivation',
-          'Equipment Reviews',
-          'Success Stories'
-        ],
-        kpis: [
-          { name: 'Website Traffic', target: 50000, current: 12500, unit: 'visitors/month' },
-          { name: 'Social Engagement', target: 5000, current: 1800, unit: 'interactions/month' },
-          { name: 'Email Subscribers', target: 5000, current: 850, unit: 'subscribers' },
-          { name: 'Content Shares', target: 1000, current: 240, unit: 'shares/month' }
-        ],
-        keywords: [
-          'home workout',
-          'fitness routine',
-          'weight loss tips',
-          'strength training',
-          'healthy lifestyle'
-        ],
-        contentTypes: [
-          'Blog Articles',
-          'Video Tutorials',
-          'Social Posts',
-          'Email Newsletters',
-          'Infographics'
-        ],
-        platforms: [
-          'Instagram',
-          'YouTube',
-          'TikTok',
-          'Facebook',
-          'Email'
-        ],
-        createdAt: '2024-01-01'
-      }
-    ])
+    // Fetch real campaigns from API
+    fetchCampaigns()
   }, [])
+
+  const fetchCampaigns = async () => {
+    try {
+      const response = await fetch('/api/campaigns')
+      if (response.ok) {
+        const data = await response.json()
+        setCampaigns(data.campaigns || [])
+      } else {
+        console.error('Failed to fetch campaigns')
+      }
+    } catch (error) {
+      console.error('Error fetching campaigns:', error)
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -123,47 +83,62 @@ export default function CampaignsHub() {
     return Math.round(avgProgress)
   }
 
-  const createCampaign = () => {
+  const createCampaign = async () => {
     if (!newCampaign.name || !newCampaign.goal) {
       alert('Please fill in campaign name and goal')
       return
     }
 
-    const campaign: Campaign = {
-      id: `campaign-${Date.now()}`,
-      name: newCampaign.name!,
-      description: newCampaign.description || '',
-      status: 'planning',
-      goal: newCampaign.goal!,
-      objectives: newCampaign.objectives?.filter(obj => obj.trim()) || [],
-      targetAudience: newCampaign.targetAudience || '',
-      budget: newCampaign.budget || 0,
-      duration: newCampaign.duration || '3 months',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      contentPillars: newCampaign.contentPillars?.filter(pillar => pillar.trim()) || [],
-      keywords: newCampaign.keywords?.filter(kw => kw.trim()) || [],
-      contentTypes: newCampaign.contentTypes?.filter(type => type.trim()) || [],
-      platforms: newCampaign.platforms?.filter(platform => platform.trim()) || [],
-      kpis: [],
-      createdAt: new Date().toISOString()
-    }
+    try {
+      const campaignData = {
+        name: newCampaign.name!,
+        description: newCampaign.description || '',
+        goal: newCampaign.goal!,
+        objectives: newCampaign.objectives?.filter(obj => obj.trim()) || [],
+        targetAudience: newCampaign.targetAudience || '',
+        budget: newCampaign.budget || 0,
+        duration: newCampaign.duration || '3 months',
+        contentPillars: newCampaign.contentPillars?.filter(pillar => pillar.trim()) || [],
+        keywords: newCampaign.keywords?.filter(kw => kw.trim()) || [],
+        contentTypes: newCampaign.contentTypes?.filter(type => type.trim()) || [],
+        platforms: newCampaign.platforms?.filter(platform => platform.trim()) || [],
+        status: 'planning' as const
+      }
 
-    setCampaigns(prev => [...prev, campaign])
-    setShowCreateModal(false)
-    setNewCampaign({
-      name: '',
-      description: '',
-      goal: '',
-      objectives: [''],
-      targetAudience: '',
-      budget: 0,
-      duration: '3 months',
-      contentPillars: [''],
-      keywords: [''],
-      contentTypes: [''],
-      platforms: ['']
-    })
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(campaignData)
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        await fetchCampaigns() // Refresh the campaigns list
+        setShowCreateModal(false)
+        setNewCampaign({
+          name: '',
+          description: '',
+          goal: '',
+          objectives: [''],
+          targetAudience: '',
+          budget: 0,
+          duration: '3 months',
+          contentPillars: [''],
+          keywords: [''],
+          contentTypes: [''],
+          platforms: ['']
+        })
+        alert('Campaign created successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Failed to create campaign: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error)
+      alert('Failed to create campaign. Please try again.')
+    }
   }
 
   const addArrayField = (field: keyof Pick<Campaign, 'objectives' | 'contentPillars' | 'keywords' | 'contentTypes' | 'platforms'>) => {

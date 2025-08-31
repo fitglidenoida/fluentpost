@@ -305,6 +305,29 @@ export const initializeDatabase = () => {
       UNIQUE(topicId)
     );
 
+    -- Campaigns table (strategic marketing campaigns)
+    CREATE TABLE IF NOT EXISTS Campaign (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      goal TEXT NOT NULL,
+      objectives TEXT, -- JSON array of objectives
+      targetAudience TEXT,
+      budget INTEGER DEFAULT 0,
+      duration TEXT DEFAULT '3 months',
+      startDate DATE,
+      endDate DATE,
+      contentPillars TEXT, -- JSON array of content pillars
+      keywords TEXT, -- JSON array of seed keywords
+      contentTypes TEXT, -- JSON array of content types
+      platforms TEXT, -- JSON array of target platforms
+      status TEXT DEFAULT 'planning', -- planning, active, paused, completed
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
+    );
+
     -- App Settings table
     CREATE TABLE IF NOT EXISTS AppSettings (
       id TEXT PRIMARY KEY,
@@ -438,6 +461,64 @@ const initializeFitGlideData = () => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
       `, [keywordId, websiteId, kw.keyword, kw.searchVolume, kw.difficulty, 60, kw.intent, 'active']);
     });
+    
+    // Create a default campaign for FitGlide
+    const existingCampaign = dbHelpers.queryFirst('SELECT * FROM Campaign WHERE userId = ?', ['fitglide-user']);
+    if (!existingCampaign) {
+      dbHelpers.execute(`
+        INSERT INTO Campaign (
+          id, userId, name, description, goal, objectives, targetAudience, 
+          budget, duration, startDate, endDate, contentPillars, keywords, 
+          contentTypes, platforms, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [
+        'fitglide-q1-2024',
+        'fitglide-user',
+        'FitGlide Q1 2024 Brand Awareness',
+        'Build brand awareness and establish FitGlide as the go-to fitness content hub',
+        'Brand Awareness & Lead Generation',
+        JSON.stringify([
+          'Increase brand mentions by 200%',
+          'Generate 1000 qualified leads',
+          'Achieve 50K monthly website visitors',
+          'Build email list to 5000 subscribers'
+        ]),
+        'Fitness enthusiasts aged 25-45, seeking effective home workout solutions',
+        0,
+        '3 months',
+        '2024-01-01',
+        '2024-03-31',
+        JSON.stringify([
+          'Home Workouts',
+          'Nutrition Tips',
+          'Fitness Motivation',
+          'Equipment Reviews',
+          'Success Stories'
+        ]),
+        JSON.stringify([
+          'home workout',
+          'fitness routine',
+          'weight loss tips',
+          'strength training',
+          'healthy lifestyle'
+        ]),
+        JSON.stringify([
+          'Blog Articles',
+          'Video Tutorials',
+          'Social Posts',
+          'Email Newsletters',
+          'Infographics'
+        ]),
+        JSON.stringify([
+          'Instagram',
+          'YouTube',
+          'TikTok',
+          'Facebook',
+          'Email'
+        ]),
+        'active'
+      ]);
+    }
     
     console.log('FitGlide-specific data initialized successfully!');
   }
