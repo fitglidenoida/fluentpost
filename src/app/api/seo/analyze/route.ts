@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
 import db from '@/lib/db'
 import { z } from 'zod'
@@ -10,27 +8,24 @@ const analyzeWebsiteSchema = z.object({
   websiteName: z.string().min(1).max(100)
 })
 
+const FITGLIDE_USER_ID = 'fitglide-user'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
     const { url, websiteName } = analyzeWebsiteSchema.parse(body)
 
-    // Get or create website record
+    // Get or create website record (for personal FitGlide tool)
     let website = db.queryFirst(
       'SELECT * FROM Website WHERE url = ? AND userId = ?',
-      [url, session.user.id]
+      [url, FITGLIDE_USER_ID]
     )
 
     if (!website) {
       const websiteId = `web_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       db.execute(
         'INSERT INTO Website (id, name, url, userId, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-        [websiteId, websiteName, url, session.user.id, 'scanning']
+        [websiteId, websiteName, url, FITGLIDE_USER_ID, 'scanning']
       )
       website = db.queryFirst('SELECT * FROM Website WHERE id = ?', [websiteId])
     }
@@ -85,11 +80,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')
 
@@ -97,10 +87,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Website ID required' }, { status: 400 })
     }
 
-    // Get website with all analyses
+    // Get website with all analyses (for personal FitGlide tool)
     const website = db.queryFirst(
       'SELECT * FROM Website WHERE id = ? AND userId = ?',
-      [websiteId, session.user.id]
+      [websiteId, FITGLIDE_USER_ID]
     )
 
     if (website) {

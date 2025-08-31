@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
 import db from '@/lib/db'
 import { z } from 'zod'
@@ -9,20 +7,17 @@ const auditWebsiteSchema = z.object({
   websiteId: z.string()
 })
 
+const FITGLIDE_USER_ID = 'fitglide-user'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
     const { websiteId } = auditWebsiteSchema.parse(body)
 
-    // Verify website ownership and get the URL
+    // Get the website (for personal FitGlide tool, all websites belong to fitglide-user)
     const website = db.queryFirst(
       'SELECT * FROM Website WHERE id = ? AND userId = ?',
-      [websiteId, session.user.id]
+      [websiteId, FITGLIDE_USER_ID]
     )
 
     if (!website) {
@@ -158,19 +153,14 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')
 
     if (websiteId) {
-      // If specific website requested, verify ownership
+      // If specific website requested, verify it belongs to FitGlide
       const website = db.queryFirst(
         'SELECT * FROM Website WHERE id = ? AND userId = ?',
-        [websiteId, session.user.id]
+        [websiteId, FITGLIDE_USER_ID]
       )
       if (!website) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
@@ -194,7 +184,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN Website w ON p.websiteId = w.id
         WHERE p.websiteId IN (SELECT id FROM Website WHERE userId = ?)
         ORDER BY p.scannedAt DESC
-      `, [session.user.id])
+      `, [FITGLIDE_USER_ID])
     }
 
     // Format audits with website info

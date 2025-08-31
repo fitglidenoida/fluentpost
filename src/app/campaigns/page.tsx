@@ -1,68 +1,190 @@
-import db from '@/lib/db'
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 interface Campaign {
   id: string
   name: string
-  description?: string
-  status: string
+  description: string
+  status: 'planning' | 'active' | 'paused' | 'completed'
   goal: string
-  budget?: number
+  objectives: string[]
+  targetAudience: string
+  budget: number
+  duration: string
   startDate: string
   endDate: string
-  targetAudience?: string
-  createdAt: string
-  analytics?: Array<{
-    id: string
-    type: string
-    metric: string
-    value: number
+  contentPillars: string[]
+  kpis: Array<{
+    name: string
+    target: number
+    current: number
+    unit: string
   }>
+  keywords: string[]
+  contentTypes: string[]
+  platforms: string[]
+  createdAt: string
 }
 
-async function getCampaignsData(): Promise<Campaign[]> {
-  try {
-    // Mock data since Campaign table doesn't exist in our current schema
-    const campaigns: any[] = []
+export default function CampaignsHub() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
+  const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
+    name: '',
+    description: '',
+    goal: '',
+    objectives: [''],
+    targetAudience: '',
+    budget: 0,
+    duration: '3 months',
+    contentPillars: [''],
+    keywords: [''],
+    contentTypes: [''],
+    platforms: ['']
+  })
 
-    return campaigns.map((campaign: any) => ({
-      ...campaign,
-      startDate: campaign.startDate.toISOString(),
-      endDate: campaign.endDate.toISOString(),
-      createdAt: campaign.createdAt.toISOString(),
-    }))
-  } catch (error) {
-    console.error('Error fetching campaigns data:', error)
-    return []
-  }
-}
-
-export default async function Campaigns() {
-  const campaigns = await getCampaignsData()
+  useEffect(() => {
+    // Initialize with sample FitGlide campaigns
+    setCampaigns([
+      {
+        id: 'fitglide-q1-2024',
+        name: 'FitGlide Q1 2024 Brand Awareness',
+        description: 'Build brand awareness and establish FitGlide as the go-to fitness content hub',
+        status: 'active',
+        goal: 'Brand Awareness & Lead Generation',
+        objectives: [
+          'Increase brand mentions by 200%',
+          'Generate 1000 qualified leads',
+          'Achieve 50K monthly website visitors',
+          'Build email list to 5000 subscribers'
+        ],
+        targetAudience: 'Fitness enthusiasts aged 25-45, seeking effective home workout solutions',
+        budget: 0, // Free tools only
+        duration: '3 months',
+        startDate: '2024-01-01',
+        endDate: '2024-03-31',
+        contentPillars: [
+          'Home Workouts',
+          'Nutrition Tips',
+          'Fitness Motivation',
+          'Equipment Reviews',
+          'Success Stories'
+        ],
+        kpis: [
+          { name: 'Website Traffic', target: 50000, current: 12500, unit: 'visitors/month' },
+          { name: 'Social Engagement', target: 5000, current: 1800, unit: 'interactions/month' },
+          { name: 'Email Subscribers', target: 5000, current: 850, unit: 'subscribers' },
+          { name: 'Content Shares', target: 1000, current: 240, unit: 'shares/month' }
+        ],
+        keywords: [
+          'home workout',
+          'fitness routine',
+          'weight loss tips',
+          'strength training',
+          'healthy lifestyle'
+        ],
+        contentTypes: [
+          'Blog Articles',
+          'Video Tutorials',
+          'Social Posts',
+          'Email Newsletters',
+          'Infographics'
+        ],
+        platforms: [
+          'Instagram',
+          'YouTube',
+          'TikTok',
+          'Facebook',
+          'Email'
+        ],
+        createdAt: '2024-01-01'
+      }
+    ])
+  }, [])
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'planning': return 'bg-yellow-100 text-yellow-800'
-      case 'paused': return 'bg-orange-100 text-orange-800'
-      case 'completed': return 'bg-blue-100 text-blue-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'active': return 'bg-green-100 text-green-800 border-green-200'
+      case 'planning': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'paused': return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200'
+      default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
 
   const calculateProgress = (campaign: Campaign) => {
-    // Calculate progress based on analytics data
-    const totalValue = campaign.analytics?.reduce((sum, analytics) => sum + analytics.value, 0) || 0
-    
-    // Simple progress calculation - can be enhanced based on goals
-    return Math.min(Math.round(totalValue / 10), 100)
+    if (!campaign.kpis.length) return 0
+    const avgProgress = campaign.kpis.reduce((sum, kpi) => 
+      sum + Math.min((kpi.current / kpi.target) * 100, 100), 0
+    ) / campaign.kpis.length
+    return Math.round(avgProgress)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+  const createCampaign = () => {
+    if (!newCampaign.name || !newCampaign.goal) {
+      alert('Please fill in campaign name and goal')
+      return
+    }
+
+    const campaign: Campaign = {
+      id: `campaign-${Date.now()}`,
+      name: newCampaign.name!,
+      description: newCampaign.description || '',
+      status: 'planning',
+      goal: newCampaign.goal!,
+      objectives: newCampaign.objectives?.filter(obj => obj.trim()) || [],
+      targetAudience: newCampaign.targetAudience || '',
+      budget: newCampaign.budget || 0,
+      duration: newCampaign.duration || '3 months',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      contentPillars: newCampaign.contentPillars?.filter(pillar => pillar.trim()) || [],
+      keywords: newCampaign.keywords?.filter(kw => kw.trim()) || [],
+      contentTypes: newCampaign.contentTypes?.filter(type => type.trim()) || [],
+      platforms: newCampaign.platforms?.filter(platform => platform.trim()) || [],
+      kpis: [],
+      createdAt: new Date().toISOString()
+    }
+
+    setCampaigns(prev => [...prev, campaign])
+    setShowCreateModal(false)
+    setNewCampaign({
+      name: '',
+      description: '',
+      goal: '',
+      objectives: [''],
+      targetAudience: '',
+      budget: 0,
+      duration: '3 months',
+      contentPillars: [''],
+      keywords: [''],
+      contentTypes: [''],
+      platforms: ['']
     })
+  }
+
+  const addArrayField = (field: keyof Pick<Campaign, 'objectives' | 'contentPillars' | 'keywords' | 'contentTypes' | 'platforms'>) => {
+    setNewCampaign(prev => ({
+      ...prev,
+      [field]: [...(prev[field] || []), '']
+    }))
+  }
+
+  const updateArrayField = (field: keyof Pick<Campaign, 'objectives' | 'contentPillars' | 'keywords' | 'contentTypes' | 'platforms'>, index: number, value: string) => {
+    setNewCampaign(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).map((item, i) => i === index ? value : item)
+    }))
+  }
+
+  const removeArrayField = (field: keyof Pick<Campaign, 'objectives' | 'contentPillars' | 'keywords' | 'contentTypes' | 'platforms'>, index: number) => {
+    setNewCampaign(prev => ({
+      ...prev,
+      [field]: (prev[field] || []).filter((_, i) => i !== index)
+    }))
   }
 
   return (
@@ -77,95 +199,52 @@ export default async function Campaigns() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">FitGlide</h2>
-              <p className="text-sm text-gray-500">Marketing Tool</p>
+              <p className="text-sm text-gray-500">Marketing Hub</p>
             </div>
           </div>
 
           {/* Navigation */}
           <nav className="space-y-2">
-            <a href="/" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
+            <Link href="/" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
               </svg>
               Dashboard
-            </a>
-            <a href="/research" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Research Hub
-            </a>
-            <a href="/content" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Content Studio
-            </a>
-            <a href="/social" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              Social Media
-            </a>
-            <a href="/analytics" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Analytics
-            </a>
+            </Link>
             <div className="w-full flex items-center px-4 py-3 rounded-lg text-left bg-blue-600 text-white">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Campaigns
+              🎯 Campaigns
             </div>
-            <a href="/users" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
+            <Link href="/research" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Users
-            </a>
-            <a href="/calendar" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
+              Research Hub
+            </Link>
+            <Link href="/content" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Content Studio
+            </Link>
+            <Link href="/calendar" className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               Calendar
-            </a>
-            <button className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Settings
-            </button>
+            </Link>
           </nav>
         </div>
 
-        {/* User Profile */}
+        {/* FitGlide Branding */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">S</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">Sarah Johnson</p>
-              <p className="text-xs text-gray-500">Marketing Manager</p>
-            </div>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-2">Campaign-First Strategy</div>
+            <div className="text-sm font-medium text-gray-900">FitGlide Marketing Hub</div>
+            <div className="text-xs text-green-600 mt-1">🎯 Strategic Content Planning</div>
           </div>
-        </div>
-
-        {/* AI Admin Panel Link */}
-        <div className="absolute bottom-20 left-0 right-0 p-6">
-          <a 
-            href="/admin" 
-            className="w-full flex items-center px-4 py-3 rounded-lg text-left text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
-          >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            AI Admin Panel
-          </a>
         </div>
       </div>
 
@@ -174,100 +253,399 @@ export default async function Campaigns() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Campaigns</h1>
-            <p className="text-gray-600 text-lg">Manage and track your marketing campaigns</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">🎯 Campaign Strategy Hub</h1>
+            <p className="text-gray-600 text-lg">Plan campaigns first, then create content with purpose! 🚀</p>
           </div>
-          <div className="flex gap-4">
-            <a 
-              href="/campaigns/create"
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Create Campaign
-            </a>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Create Campaign
+          </button>
+        </div>
+
+        {/* Strategy Process Flow */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-8 border border-blue-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">🎪 Campaign-First Workflow</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold">1</span>
+              </div>
+              <div className="text-sm font-medium text-gray-900">Campaign Setup</div>
+              <div className="text-xs text-gray-600">Goals & Audience</div>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold">2</span>
+              </div>
+              <div className="text-sm font-medium text-gray-900">Keyword Research</div>
+              <div className="text-xs text-gray-600">Based on Goals</div>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold">3</span>
+              </div>
+              <div className="text-sm font-medium text-gray-900">Content Pillars</div>
+              <div className="text-xs text-gray-600">Strategic Themes</div>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold">4</span>
+              </div>
+              <div className="text-sm font-medium text-gray-900">Content Calendar</div>
+              <div className="text-xs text-gray-600">Planned Schedule</div>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-white font-bold">5</span>
+              </div>
+              <div className="text-sm font-medium text-gray-900">Content Creation</div>
+              <div className="text-xs text-gray-600">Execute & Track</div>
+            </div>
           </div>
         </div>
 
-        {/* Campaigns Grid */}
-        {campaigns.length === 0 ? (
+        {/* Campaign Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {campaigns.map((campaign) => (
+            <div key={campaign.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+              {/* Campaign Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900">{campaign.name}</h3>
+                    <span className={`px-3 py-1 text-sm rounded-full border ${getStatusColor(campaign.status)}`}>
+                      {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-3">{campaign.description}</p>
+                  <div className="text-sm">
+                    <span className="font-medium text-gray-900">Goal:</span> 
+                    <span className="text-blue-600 ml-1">{campaign.goal}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI Progress */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-900">Campaign Progress</h4>
+                  <span className="text-lg font-bold text-blue-600">{calculateProgress(campaign)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${calculateProgress(campaign)}%` }}
+                  ></div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {campaign.kpis.slice(0, 4).map((kpi, index) => (
+                    <div key={index} className="text-center p-2 bg-gray-50 rounded-lg">
+                      <div className="text-sm font-medium text-gray-900">{kpi.current.toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">{kpi.name}</div>
+                      <div className="text-xs text-blue-600">{Math.round((kpi.current / kpi.target) * 100)}% of target</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content Strategy */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Content Strategy</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Content Pillars:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {campaign.contentPillars.slice(0, 3).map((pillar, index) => (
+                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                          {pillar}
+                        </span>
+                      ))}
+                      {campaign.contentPillars.length > 3 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          +{campaign.contentPillars.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Platforms:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {campaign.platforms.map((platform, index) => (
+                        <span key={index} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                          {platform}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Link 
+                  href={`/research?campaign=${campaign.id}`}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors text-center"
+                >
+                  🔍 Research Keywords
+                </Link>
+                <Link 
+                  href={`/content?campaign=${campaign.id}`}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors text-center"
+                >
+                  ✍️ Create Content
+                </Link>
+                <Link 
+                  href={`/campaigns/${campaign.id}`}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  📊 Details
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {campaigns.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No campaigns yet</h3>
-            <p className="text-gray-500 mb-6">Create your first campaign to start tracking your marketing efforts</p>
-            <a 
-              href="/campaigns/create"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Start with Strategy! 🎯</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Create your first campaign to establish clear goals, target audience, and content strategy before jumping into content creation.
+            </p>
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              Create Your First Campaign
-            </a>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.name}</h3>
-                    {campaign.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{campaign.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(campaign.status)}`}>
-                        {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="space-y-2 text-sm text-gray-500">
-                      <div><span className="font-medium">Goal:</span> {campaign.goal}</div>
-                      {campaign.budget && campaign.budget > 0 && (
-                        <div><span className="font-medium">Budget:</span> ${campaign.budget.toLocaleString()}</div>
-                      )}
-                      {campaign.targetAudience && (
-                        <div><span className="font-medium">Target:</span> {campaign.targetAudience}</div>
-                      )}
-                      <div><span className="font-medium">Duration:</span> {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-600">Progress</span>
-                    <span className="font-semibold text-gray-900">{calculateProgress(campaign)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${calculateProgress(campaign)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <a 
-                    href={`/campaigns/${campaign.id}`}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors text-center"
-                  >
-                    View Details
-                  </a>
-                  <a 
-                    href={`/campaigns/${campaign.id}/edit`}
-                    className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors text-center"
-                  >
-                    Edit
-                  </a>
-                </div>
-              </div>
-            ))}
+              Create Your First Campaign 🚀
+            </button>
           </div>
         )}
       </div>
+
+      {/* Create Campaign Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">🎯 Create Strategic Campaign</h2>
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">📋 Campaign Basics</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Name *</label>
+                    <input 
+                      type="text"
+                      value={newCampaign.name || ''}
+                      onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
+                      placeholder="e.g., FitGlide Summer Transformation 2024"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea 
+                      value={newCampaign.description || ''}
+                      onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
+                      placeholder="Brief description of your campaign..."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Goal *</label>
+                    <select 
+                      value={newCampaign.goal || ''}
+                      onChange={(e) => setNewCampaign({...newCampaign, goal: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select primary goal...</option>
+                      <option value="Brand Awareness">Brand Awareness</option>
+                      <option value="Lead Generation">Lead Generation</option>
+                      <option value="Sales Conversion">Sales Conversion</option>
+                      <option value="Community Building">Community Building</option>
+                      <option value="Content Education">Content Education</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                    <textarea 
+                      value={newCampaign.targetAudience || ''}
+                      onChange={(e) => setNewCampaign({...newCampaign, targetAudience: e.target.value})}
+                      placeholder="e.g., Fitness enthusiasts aged 25-45, seeking home workout solutions..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Strategy Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">🎯 Strategy & Content</h3>
+                  
+                  {/* Campaign Objectives */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Objectives</label>
+                    {(newCampaign.objectives || ['']).map((objective, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input 
+                          type="text"
+                          value={objective}
+                          onChange={(e) => updateArrayField('objectives', index, e.target.value)}
+                          placeholder="e.g., Increase website traffic by 200%"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        {index > 0 && (
+                          <button 
+                            onClick={() => removeArrayField('objectives', index)}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => addArrayField('objectives')}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Add Objective
+                    </button>
+                  </div>
+
+                  {/* Content Pillars */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Content Pillars</label>
+                    {(newCampaign.contentPillars || ['']).map((pillar, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input 
+                          type="text"
+                          value={pillar}
+                          onChange={(e) => updateArrayField('contentPillars', index, e.target.value)}
+                          placeholder="e.g., Home Workouts, Nutrition Tips"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        {index > 0 && (
+                          <button 
+                            onClick={() => removeArrayField('contentPillars', index)}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => addArrayField('contentPillars')}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Add Content Pillar
+                    </button>
+                  </div>
+
+                  {/* Seed Keywords */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Seed Keywords</label>
+                    {(newCampaign.keywords || ['']).map((keyword, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input 
+                          type="text"
+                          value={keyword}
+                          onChange={(e) => updateArrayField('keywords', index, e.target.value)}
+                          placeholder="e.g., home workout, fitness routine"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        {index > 0 && (
+                          <button 
+                            onClick={() => removeArrayField('keywords', index)}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => addArrayField('keywords')}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Add Keyword
+                    </button>
+                  </div>
+
+                  {/* Platforms */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Target Platforms</label>
+                    {(newCampaign.platforms || ['']).map((platform, index) => (
+                      <div key={index} className="flex gap-2 mb-2">
+                        <input 
+                          type="text"
+                          value={platform}
+                          onChange={(e) => updateArrayField('platforms', index, e.target.value)}
+                          placeholder="e.g., Instagram, YouTube, TikTok"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        {index > 0 && (
+                          <button 
+                            onClick={() => removeArrayField('platforms', index)}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button 
+                      onClick={() => addArrayField('platforms')}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      + Add Platform
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
+                <button 
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={createCampaign}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  🚀 Create Campaign
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

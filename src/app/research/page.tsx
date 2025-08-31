@@ -499,7 +499,14 @@ export default function ResearchHub() {
 
   const groupKeywords = () => {
     // Smart grouping by topic/intent
-    const groups = {
+    const groups: {
+      workout: any[];
+      nutrition: any[];
+      weightLoss: any[];
+      muscleBuilding: any[];
+      equipment: any[];
+      other: any[];
+    } = {
       workout: [],
       nutrition: [],
       weightLoss: [],
