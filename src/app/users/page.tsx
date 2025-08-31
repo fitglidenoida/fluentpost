@@ -92,23 +92,7 @@ export default function Users() {
     )
   }
 
-  // Show access denied for non-admin users
-  if (session?.user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600 mb-4">Admin privileges required to view all users.</p>
-          <button 
-            onClick={() => router.push('/')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // Personal FitGlide tool - no access control needed
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,16 +172,15 @@ export default function Users() {
         </div>
 
         {/* User Profile */}
+        {/* FitGlide Branding */}
         <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {session?.user?.name?.charAt(0) || 'U'}
-              </span>
+              <span className="text-white text-sm font-medium">F</span>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{session?.user?.name || 'User'}</p>
-              <p className="text-xs text-gray-500">{session?.user?.role || 'User'}</p>
+              <p className="text-sm font-medium text-gray-900">FitGlide Admin</p>
+              <p className="text-xs text-gray-500">Personal Tool</p>
             </div>
           </div>
         </div>
@@ -336,9 +319,7 @@ export default function Users() {
                       </td>
                                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <a href={`/users/${user.id}`} className="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                        {session?.user?.role === 'admin' && (
-                          <a href={`/users/${user.id}/edit`} className="text-gray-600 hover:text-gray-900">Edit</a>
-                        )}
+                        <a href={`/users/${user.id}/edit`} className="text-gray-600 hover:text-gray-900">Edit</a>
                       </td>
                     </tr>
                   ))
