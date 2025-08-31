@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
 import db from '@/lib/db'
 import { z } from 'zod'
 
@@ -117,7 +115,7 @@ export async function POST(request: NextRequest) {
       error: 'Audit results are required to generate recommendations' 
     }, { status: 400 })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Recommendations API error:', error)
     return NextResponse.json(
       { error: `Failed to generate recommendations: ${error.message}` }, 
@@ -242,7 +240,7 @@ export async function GET(request: NextRequest) {
       recommendations: recommendationsWithWebsite,
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get recommendations error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch recommendations', details: error.message }, 
@@ -253,10 +251,6 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { recommendationId, status } = updateRecommendationSchema.parse(body)
