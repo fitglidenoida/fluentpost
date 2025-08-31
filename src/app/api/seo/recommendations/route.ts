@@ -14,14 +14,11 @@ const updateRecommendationSchema = z.object({
   status: z.enum(['pending', 'implemented', 'ignored'])
 })
 
+const FITGLIDE_USER_ID = 'fitglide-user'
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Recommendations API - POST request received')
-    
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { websiteId, auditResults } = generateRecommendationsSchema.parse(body)
@@ -39,7 +36,7 @@ export async function POST(request: NextRequest) {
       // Verify website ownership
       const website = db.queryFirst(
         'SELECT * FROM Website WHERE id = ? AND userId = ?',
-        [websiteId, session.user.id]
+        [websiteId, FITGLIDE_USER_ID]
       )
 
       if (!website) {
@@ -133,12 +130,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Recommendations API - GET request received')
     
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    console.log('Session user ID:', session.user.id)
+    console.log('FitGlide user ID:', FITGLIDE_USER_ID)
 
     // Test database connection
     try {
@@ -167,10 +159,10 @@ export async function GET(request: NextRequest) {
     const priority = searchParams.get('priority')
 
     if (websiteId) {
-      // Verify website ownership
+      // Verify website belongs to FitGlide
       const website = db.queryFirst(
         'SELECT * FROM Website WHERE id = ? AND userId = ?',
-        [websiteId, session.user.id]
+        [websiteId, FITGLIDE_USER_ID]
       )
       if (!website) {
         return NextResponse.json({ error: 'Website not found' }, { status: 404 })
@@ -196,7 +188,7 @@ export async function GET(request: NextRequest) {
         params.push(websiteId)
       } else {
         sql += ` AND r.websiteId IN (SELECT id FROM Website WHERE userId = ?)`
-        params.push(session.user.id)
+        params.push(FITGLIDE_USER_ID)
       }
       
       if (status) {

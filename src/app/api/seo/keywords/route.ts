@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
 import { SEOService } from '@/lib/seoService'
 import db from '@/lib/db'
 import { z } from 'zod'
-import { CustomSession } from '@/types/session'
 
 const keywordResearchSchema = z.object({
   domain: z.string().url(),
   seedKeywords: z.array(z.string()).min(1).max(10)
 })
 
+const FITGLIDE_USER_ID = 'fitglide-user'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as CustomSession | null
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     console.log('Keyword research request body:', body)
@@ -50,10 +45,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as CustomSession | null
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const websiteId = searchParams.get('websiteId')

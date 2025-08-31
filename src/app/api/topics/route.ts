@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
 import db from '@/lib/db'
 import * as z from 'zod'
-import { CustomSession } from '@/types/session'
 
 const topicSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -16,17 +13,14 @@ const topicSchema = z.object({
   estimatedWordCount: z.number().optional(),
 })
 
+const FITGLIDE_USER_ID = 'fitglide-user'
+
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as CustomSession | null
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user's websites to filter topics
+    // Get FitGlide websites
     const websites = db.query(
       'SELECT id FROM Website WHERE userId = ?',
-      [session.user.id]
+      [FITGLIDE_USER_ID]
     )
     
     if (websites.length === 0) {
@@ -109,18 +103,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as CustomSession | null
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
     const validatedData = topicSchema.parse(body)
 
-    // Get user's first website (for now, we'll use the first one)
+    // Get FitGlide website
     const website = db.queryFirst(
       'SELECT id FROM Website WHERE userId = ? ORDER BY createdAt DESC LIMIT 1',
-      [session.user.id]
+      [FITGLIDE_USER_ID]
     )
 
     if (!website) {
