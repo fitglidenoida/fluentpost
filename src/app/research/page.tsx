@@ -16,9 +16,9 @@ interface Campaign {
 interface Keyword {
   id: string
   keyword: string
-  searchVolume: number
-  difficulty: number
-  competition: number
+  searchVolume?: number | null
+  difficulty?: number | null
+  competition?: number | null
   intent: string
   suggestions?: string[]
 }
@@ -102,7 +102,7 @@ function ResearchHubContent() {
             searchVolume: Math.floor(Math.random() * 10000) + 100,
             difficulty: Math.floor(Math.random() * 100) + 1,
             competition: Math.floor(Math.random() * 100) + 1,
-            intent: getKeywordIntent(suggestion)
+            intent: getKeywordIntent(suggestion) || 'navigational'
           }))
           setKeywords(prev => [...prev, ...newKeywords])
         }
@@ -135,9 +135,10 @@ function ResearchHubContent() {
     }
   }
 
-  const getDifficultyColor = (difficulty: number) => {
-    if (difficulty < 30) return 'text-green-600'
-    if (difficulty < 70) return 'text-yellow-600'
+  const getDifficultyColor = (difficulty: number | null | undefined) => {
+    const safedifficulty = difficulty || 0
+    if (safedifficulty < 30) return 'text-green-600'
+    if (safedifficulty < 70) return 'text-yellow-600'
     return 'text-red-600'
   }
 
@@ -330,17 +331,19 @@ function ResearchHubContent() {
                             <div className="grid grid-cols-3 gap-4 text-sm">
                               <div>
                                 <span className="text-gray-500">Search Volume</span>
-                                <div className="font-medium text-gray-900">{keyword.searchVolume.toLocaleString()}/mo</div>
+                                <div className="font-medium text-gray-900">
+                                  {keyword.searchVolume ? keyword.searchVolume.toLocaleString() : 'N/A'}/mo
+                                </div>
                               </div>
                               <div>
                                 <span className="text-gray-500">Difficulty</span>
-                                <div className={`font-medium ${getDifficultyColor(keyword.difficulty)}`}>
-                                  {keyword.difficulty}/100
+                                <div className={`font-medium ${getDifficultyColor(keyword.difficulty || 0)}`}>
+                                  {keyword.difficulty || 0}/100
                                 </div>
                               </div>
                               <div>
                                 <span className="text-gray-500">Competition</span>
-                                <div className="font-medium text-gray-900">{keyword.competition}/100</div>
+                                <div className="font-medium text-gray-900">{keyword.competition || 0}/100</div>
                               </div>
                             </div>
                           </div>
