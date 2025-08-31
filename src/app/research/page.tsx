@@ -56,6 +56,11 @@ export default function ResearchHub() {
   const [showSaveKeywordsModal, setShowSaveKeywordsModal] = useState(false)
   const [keywordGroupName, setKeywordGroupName] = useState('')
   const [isSavingKeywords, setIsSavingKeywords] = useState(false)
+  
+  // Enhanced keyword dashboard state
+  const [keywordFilter, setKeywordFilter] = useState('all')
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [analysisKeyword, setAnalysisKeyword] = useState<any>(null)
 
   useEffect(() => {
     console.log('Research Hub: Fetching topics...')
@@ -358,6 +363,171 @@ export default function ResearchHub() {
       }
     }
   }, [activeTab, websites.length, selectedWebsiteForAudit])
+
+  // Enhanced Keyword Dashboard Helper Functions
+  const getFilteredKeywords = () => {
+    if (!keywordResearch.keywords) return []
+    
+    switch (keywordFilter) {
+      case 'high-volume':
+        return keywordResearch.keywords.filter(k => (k.searchVolume || 0) > 5000)
+      case 'low-difficulty':
+        return keywordResearch.keywords.filter(k => (k.difficulty || 0) < 40)
+      case 'trending':
+        return keywordResearch.keywords.filter(k => 
+          k.keyword.includes('2024') || 
+          k.keyword.includes('challenge') || 
+          k.keyword.includes('transformation') ||
+          k.keyword.includes('journey')
+        )
+      case 'long-tail':
+        return keywordResearch.keywords.filter(k => k.keyword.split(' ').length >= 3)
+      default:
+        return keywordResearch.keywords
+    }
+  }
+
+  const getKeywordBadges = (keyword: any) => {
+    const badges = []
+    
+    if ((keyword.searchVolume || 0) > 10000) {
+      badges.push({ text: '🔥 High Volume', className: 'bg-red-100 text-red-800' })
+    }
+    if ((keyword.difficulty || 0) < 30) {
+      badges.push({ text: '✅ Easy Win', className: 'bg-green-100 text-green-800' })
+    }
+    if (keyword.keyword.includes('2024') || keyword.keyword.includes('challenge')) {
+      badges.push({ text: '📈 Trending', className: 'bg-blue-100 text-blue-800' })
+    }
+    if (keyword.keyword.split(' ').length >= 4) {
+      badges.push({ text: '🎯 Long-tail', className: 'bg-purple-100 text-purple-800' })
+    }
+    
+    return badges
+  }
+
+  const getKeywordIntent = (keyword: string) => {
+    const lower = keyword.toLowerCase()
+    if (lower.includes('buy') || lower.includes('price') || lower.includes('cost') || lower.includes('best')) {
+      return 'Commercial'
+    }
+    if (lower.includes('how') || lower.includes('what') || lower.includes('why')) {
+      return 'Informational'
+    }
+    if (lower.includes('review') || lower.includes('compare')) {
+      return 'Comparison'
+    }
+    return 'Navigational'
+  }
+
+  const getDifficultyColor = (difficulty: number) => {
+    if (difficulty < 30) return 'bg-green-400'
+    if (difficulty < 60) return 'bg-yellow-400'
+    return 'bg-red-400'
+  }
+
+  const getCompetitionLevel = (difficulty: number) => {
+    if (difficulty < 30) return 'Low'
+    if (difficulty < 60) return 'Medium'
+    return 'High'
+  }
+
+  const getOpportunityScore = (keyword: any) => {
+    const volume = keyword.searchVolume || 0
+    const difficulty = keyword.difficulty || 0
+    
+    // Simple opportunity score: volume / (difficulty + 1)
+    const score = Math.round(volume / (difficulty + 1))
+    
+    if (score > 500) return 'A+'
+    if (score > 200) return 'A'
+    if (score > 100) return 'B+'
+    if (score > 50) return 'B'
+    return 'C'
+  }
+
+  const getContentType = (keyword: string) => {
+    const lower = keyword.toLowerCase()
+    if (lower.includes('workout') || lower.includes('exercise')) return 'Video Tutorial'
+    if (lower.includes('diet') || lower.includes('nutrition')) return 'Guide/Article'
+    if (lower.includes('challenge') || lower.includes('transformation')) return 'Challenge Series'
+    if (lower.includes('how to') || lower.includes('tips')) return 'How-to Article'
+    return 'Blog Post'
+  }
+
+  const analyzeKeyword = (keyword: any) => {
+    setAnalysisKeyword(keyword)
+    setShowAnalysisModal(true)
+  }
+
+  const exportKeywords = (format: string) => {
+    const selectedData = keywordResearch.keywords.filter(k => selectedKeywords.has(k.keyword))
+    
+    if (format === 'csv') {
+      const csv = [
+        'Keyword,Volume,Difficulty,Intent,Opportunity',
+        ...selectedData.map(k => 
+          `"${k.keyword}",${k.searchVolume || 0},${k.difficulty || 0},"${getKeywordIntent(k.keyword)}","${getOpportunityScore(k)}"`
+        )
+      ].join('\n')
+      
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'fitglide-keywords.csv'
+      a.click()
+    } else if (format === 'contentPlan') {
+      const plan = selectedData.map(k => ({
+        keyword: k.keyword,
+        contentType: getContentType(k.keyword),
+        intent: getKeywordIntent(k.keyword),
+        priority: getOpportunityScore(k),
+        volume: k.searchVolume || 0,
+        difficulty: k.difficulty || 0
+      }))
+      
+      const json = JSON.stringify(plan, null, 2)
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'fitglide-content-plan.json'
+      a.click()
+    }
+  }
+
+  const groupKeywords = () => {
+    // Smart grouping by topic/intent
+    const groups = {
+      workout: [],
+      nutrition: [],
+      weightLoss: [],
+      muscleBuilding: [],
+      equipment: [],
+      other: []
+    }
+    
+    keywordResearch.keywords.forEach(k => {
+      const lower = k.keyword.toLowerCase()
+      if (lower.includes('workout') || lower.includes('exercise') || lower.includes('training')) {
+        groups.workout.push(k)
+      } else if (lower.includes('diet') || lower.includes('nutrition') || lower.includes('food')) {
+        groups.nutrition.push(k)
+      } else if (lower.includes('weight loss') || lower.includes('lose weight') || lower.includes('fat')) {
+        groups.weightLoss.push(k)
+      } else if (lower.includes('muscle') || lower.includes('strength') || lower.includes('building')) {
+        groups.muscleBuilding.push(k)
+      } else if (lower.includes('equipment') || lower.includes('gear') || lower.includes('dumbbell')) {
+        groups.equipment.push(k)
+      } else {
+        groups.other.push(k)
+      }
+    })
+    
+    console.log('Smart keyword groups:', groups)
+    alert(`Keywords grouped!\nWorkout: ${groups.workout.length}\nNutrition: ${groups.nutrition.length}\nWeight Loss: ${groups.weightLoss.length}\nMuscle Building: ${groups.muscleBuilding.length}\nEquipment: ${groups.equipment.length}\nOther: ${groups.other.length}`)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -769,36 +939,166 @@ export default function ResearchHub() {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {keywordResearch.keywords.map((keyword: any, index: number) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-3 hover:border-blue-300 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedKeywords.has(keyword.keyword)}
-                            onChange={() => toggleKeywordSelection(keyword)}
-                            className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-gray-900">{keyword.keyword}</span>
-                              <span className="text-sm text-gray-500">Difficulty: {keyword.difficulty || 'N/A'}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-gray-600">
-                              <span>Volume: {keyword.searchVolume || 'N/A'}</span>
-                              {keyword.suggestions && (
-                                <button 
-                                  onClick={() => viewSuggestions(keyword)}
-                                  className="text-blue-600 cursor-pointer hover:underline"
-                                >
-                                  View suggestions
-                                </button>
-                              )}
+                  {/* Enhanced Keyword Intelligence Dashboard */}
+                  <div className="space-y-6">
+                    {/* Quick Stats Overview */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{keywordResearch.keywords.length}</div>
+                        <div className="text-sm text-blue-700">Total Keywords</div>
+                      </div>
+                      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {Math.round(keywordResearch.keywords.reduce((acc, k) => acc + (k.searchVolume || 0), 0) / keywordResearch.keywords.length) || 0}
+                        </div>
+                        <div className="text-sm text-green-700">Avg Volume</div>
+                      </div>
+                      <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {Math.round(keywordResearch.keywords.reduce((acc, k) => acc + (k.difficulty || 0), 0) / keywordResearch.keywords.length) || 0}
+                        </div>
+                        <div className="text-sm text-orange-700">Avg Difficulty</div>
+                      </div>
+                      <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 text-center">
+                        <div className="text-2xl font-bold text-purple-600">{selectedKeywords.size}</div>
+                        <div className="text-sm text-purple-700">Selected</div>
+                      </div>
+                    </div>
+
+                    {/* Keyword Grouping Tabs */}
+                    <div className="border-b border-gray-200">
+                      <nav className="-mb-px flex space-x-8">
+                        {['all', 'high-volume', 'low-difficulty', 'trending', 'long-tail'].map((tab) => (
+                          <button
+                            key={tab}
+                            onClick={() => setKeywordFilter(tab)}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                              keywordFilter === tab
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            {tab === 'all' && `All (${keywordResearch.keywords.length})`}
+                            {tab === 'high-volume' && `High Volume (${keywordResearch.keywords.filter(k => (k.searchVolume || 0) > 5000).length})`}
+                            {tab === 'low-difficulty' && `Easy Wins (${keywordResearch.keywords.filter(k => (k.difficulty || 0) < 40).length})`}
+                            {tab === 'trending' && `🔥 Trending (${keywordResearch.keywords.filter(k => k.keyword.includes('2024') || k.keyword.includes('challenge')).length})`}
+                            {tab === 'long-tail' && `Long-tail (${keywordResearch.keywords.filter(k => k.keyword.split(' ').length >= 3).length})`}
+                          </button>
+                        ))}
+                      </nav>
+                    </div>
+
+                    {/* Enhanced Keyword Cards */}
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {getFilteredKeywords().map((keyword: any, index: number) => (
+                        <div key={index} className="border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                          <div className="flex items-start gap-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedKeywords.has(keyword.keyword)}
+                              onChange={() => toggleKeywordSelection(keyword)}
+                              className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <div className="flex-1">
+                              {/* Keyword Header */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-gray-900 text-lg">{keyword.keyword}</span>
+                                    {getKeywordBadges(keyword).map((badge, idx) => (
+                                      <span key={idx} className={`px-2 py-1 text-xs font-medium rounded-full ${badge.className}`}>
+                                        {badge.text}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    {getKeywordIntent(keyword.keyword)} intent • {keyword.keyword.split(' ').length} words
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Metrics Bar */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-green-600">{(keyword.searchVolume || 0).toLocaleString()}</div>
+                                  <div className="text-xs text-gray-500">Monthly Volume</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="flex items-center justify-center">
+                                    <div className="text-lg font-bold text-orange-600">{keyword.difficulty || 0}</div>
+                                    <div className="ml-1 w-12 bg-gray-200 rounded-full h-2">
+                                      <div 
+                                        className={`h-2 rounded-full ${getDifficultyColor(keyword.difficulty || 0)}`}
+                                        style={{ width: `${keyword.difficulty || 0}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-gray-500">Difficulty</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600">{getCompetitionLevel(keyword.difficulty || 0)}</div>
+                                  <div className="text-xs text-gray-500">Competition</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600">{getOpportunityScore(keyword)}</div>
+                                  <div className="text-xs text-gray-500">Opportunity</div>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                                <div className="flex gap-2">
+                                  {keyword.suggestions && keyword.suggestions.length > 0 && (
+                                    <button 
+                                      onClick={() => viewSuggestions(keyword)}
+                                      className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                                    >
+                                      🔍 {keyword.suggestions.length} Suggestions
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => analyzeKeyword(keyword)}
+                                    className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                                  >
+                                    📊 Deep Analysis
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Best for: {getContentType(keyword.keyword)}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Export & Actions */}
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <div className="text-sm text-gray-600">
+                        {selectedKeywords.size} of {keywordResearch.keywords.length} keywords selected
                       </div>
-                    ))}
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => exportKeywords('csv')}
+                          className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          📄 Export CSV
+                        </button>
+                        <button 
+                          onClick={() => exportKeywords('contentPlan')}
+                          className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                        >
+                          📝 Content Plan
+                        </button>
+                        <button 
+                          onClick={() => groupKeywords()}
+                          className="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                        >
+                          🎯 Smart Groups
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
