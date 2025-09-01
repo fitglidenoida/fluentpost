@@ -42,6 +42,8 @@ function ResearchHubContent() {
   const [competitorData, setCompetitorData] = useState<any[]>([])
   const [smoTrends, setSmoTrends] = useState<any[]>([])
   const [isLoadingSMO, setIsLoadingSMO] = useState(false)
+  const [dataSource, setDataSource] = useState<'real' | 'fallback'>('fallback')
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchCampaigns()
@@ -73,6 +75,17 @@ function ResearchHubContent() {
   useEffect(() => {
     if (selectedCampaign && researchType === 'competitors') {
       fetchCompetitors()
+    }
+  }, [selectedCampaign, researchType])
+
+  // Auto-refresh SMO data every 5 minutes
+  useEffect(() => {
+    if (selectedCampaign && (researchType === 'smo' || researchType === 'hashtags' || researchType === 'competitors')) {
+      const interval = setInterval(() => {
+        refreshSMOData()
+      }, 5 * 60 * 1000) // 5 minutes
+
+      return () => clearInterval(interval)
     }
   }, [selectedCampaign, researchType])
 
@@ -177,10 +190,13 @@ function ResearchHubContent() {
       if (response.ok) {
         const data = await response.json()
         setSmoTrends(data.trends || [])
+        setDataSource(data.dataSource || 'fallback')
+        setLastUpdated(new Date())
         console.log('SMO Trends Data Source:', data.dataSource)
       }
     } catch (error) {
       console.error('Error fetching SMO trends:', error)
+      setDataSource('fallback')
     } finally {
       setIsLoadingSMO(false)
     }
@@ -193,12 +209,25 @@ function ResearchHubContent() {
       if (response.ok) {
         const data = await response.json()
         setHashtags(data.hashtags || [])
+        setDataSource(data.dataSource || 'fallback')
+        setLastUpdated(new Date())
         console.log('Hashtags Data Source:', data.dataSource)
       }
     } catch (error) {
       console.error('Error fetching hashtags:', error)
+      setDataSource('fallback')
     } finally {
       setIsLoadingSMO(false)
+    }
+  }
+
+  const refreshSMOData = async () => {
+    if (researchType === 'smo') {
+      await fetchSMOTrends()
+    } else if (researchType === 'hashtags') {
+      await fetchHashtags()
+    } else if (researchType === 'competitors') {
+      await fetchCompetitors()
     }
   }
 
@@ -479,12 +508,38 @@ function ResearchHubContent() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">📱 Social Media Trends</h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                        🔄 Live Data
+                      <button
+                        onClick={refreshSMOData}
+                        disabled={isLoadingSMO}
+                        className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-all ${
+                          dataSource === 'real' 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        } ${isLoadingSMO ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        {isLoadingSMO ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-current"></div>
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            🔄 Refresh Data
+                          </>
+                        )}
+                      </button>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        dataSource === 'real' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {dataSource === 'real' ? '📊 Real Data' : '📋 Fallback Data'}
                       </span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                        📊 Google Trends
-                      </span>
+                      {lastUpdated && (
+                        <span className="text-xs text-gray-500">
+                          Updated: {lastUpdated.toLocaleTimeString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isLoadingSMO ? (
@@ -548,12 +603,38 @@ function ResearchHubContent() {
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">#️⃣ Hashtag Strategy</h3>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                        🔄 Live Data
+                      <button
+                        onClick={refreshSMOData}
+                        disabled={isLoadingSMO}
+                        className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 transition-all ${
+                          dataSource === 'real' 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        } ${isLoadingSMO ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        {isLoadingSMO ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-current"></div>
+                            Refreshing...
+                          </>
+                        ) : (
+                          <>
+                            🔄 Refresh Data
+                          </>
+                        )}
+                      </button>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        dataSource === 'real' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {dataSource === 'real' ? '📱 Real Data' : '📋 Fallback Data'}
                       </span>
-                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                        📱 Multi-Platform
-                      </span>
+                      {lastUpdated && (
+                        <span className="text-xs text-gray-500">
+                          Updated: {lastUpdated.toLocaleTimeString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isLoadingSMO ? (
