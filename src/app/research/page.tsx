@@ -177,6 +177,7 @@ function ResearchHubContent() {
       if (response.ok) {
         const data = await response.json()
         setSmoTrends(data.trends || [])
+        console.log('SMO Trends Data Source:', data.dataSource)
       }
     } catch (error) {
       console.error('Error fetching SMO trends:', error)
@@ -192,6 +193,7 @@ function ResearchHubContent() {
       if (response.ok) {
         const data = await response.json()
         setHashtags(data.hashtags || [])
+        console.log('Hashtags Data Source:', data.dataSource)
       }
     } catch (error) {
       console.error('Error fetching hashtags:', error)
@@ -474,7 +476,17 @@ function ResearchHubContent() {
             {researchType === 'smo' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Social Media Trends</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">📱 Social Media Trends</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        🔄 Live Data
+                      </span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                        📊 Google Trends
+                      </span>
+                    </div>
+                  </div>
                   {isLoadingSMO ? (
                     <div className="text-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -533,7 +545,17 @@ function ResearchHubContent() {
             {researchType === 'hashtags' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">#️⃣ Hashtag Strategy</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">#️⃣ Hashtag Strategy</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        🔄 Live Data
+                      </span>
+                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                        📱 Multi-Platform
+                      </span>
+                    </div>
+                  </div>
                   {isLoadingSMO ? (
                     <div className="text-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>

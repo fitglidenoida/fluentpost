@@ -3,14 +3,24 @@ import { NextRequest, NextResponse } from 'next/server'
 // Google Trends API (free tier)
 async function fetchGoogleTrends(category: string, timeframe: string) {
   try {
-    // Google Trends API endpoint
+    // Google Trends API endpoint - using a more reliable approach
     const geo = 'US' // Can be made dynamic
     const date = timeframe === '24h' ? 'now 1-d' : 
                  timeframe === '7d' ? 'now 7-d' : 'now 30-d'
     
+    // Using a more reliable Google Trends endpoint
     const url = `https://trends.google.com/trends/api/dailytrends?hl=en-US&tz=-120&geo=${geo}&ns=15&ed=${date}&cat=all`
     
-    const response = await fetch(url)
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Google Trends API responded with status: ${response.status}`)
+    }
+    
     const data = await response.text()
     
     // Google Trends returns data with ")]}'" prefix, need to remove it
@@ -18,11 +28,11 @@ async function fetchGoogleTrends(category: string, timeframe: string) {
     const trends = JSON.parse(cleanData)
     
     // Filter for fitness-related trends
-    const fitnessTrends = trends.default.trendingSearchesDays?.[0]?.trendingSearches
+    const fitnessTrends = trends.default?.trendingSearchesDays?.[0]?.trendingSearches
       ?.filter((item: any) => {
-        const title = item.title.query.toLowerCase()
-        const relatedQueries = item.relatedQueries?.map((q: any) => q.query.toLowerCase()) || []
-        const fitnessKeywords = ['fitness', 'workout', 'exercise', 'gym', 'health', 'diet', 'nutrition', 'weight', 'cardio', 'strength', 'yoga', 'pilates']
+        const title = item.title?.query?.toLowerCase() || ''
+        const relatedQueries = item.relatedQueries?.map((q: any) => q.query?.toLowerCase()) || []
+        const fitnessKeywords = ['fitness', 'workout', 'exercise', 'gym', 'health', 'diet', 'nutrition', 'weight', 'cardio', 'strength', 'yoga', 'pilates', 'training', 'muscle', 'abs', 'weightloss']
         return fitnessKeywords.some(keyword => 
           title.includes(keyword) || relatedQueries.some((q: string) => q.includes(keyword))
         )
@@ -37,6 +47,7 @@ async function fetchGoogleTrends(category: string, timeframe: string) {
         hashtags: item.relatedQueries?.slice(0, 3).map((q: any) => `#${q.query.replace(/\s+/g, '')}`) || []
       })) || []
     
+    console.log('Google Trends API Success:', fitnessTrends.length, 'trends found')
     return fitnessTrends
   } catch (error) {
     console.error('Google Trends API Error:', error)
