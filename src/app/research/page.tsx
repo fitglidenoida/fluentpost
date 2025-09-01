@@ -40,6 +40,8 @@ function ResearchHubContent() {
   const [hashtags, setHashtags] = useState<any[]>([])
   const [trendingTopics, setTrendingTopics] = useState<any[]>([])
   const [competitorData, setCompetitorData] = useState<any[]>([])
+  const [smoTrends, setSmoTrends] = useState<any[]>([])
+  const [isLoadingSMO, setIsLoadingSMO] = useState(false)
 
   useEffect(() => {
     fetchCampaigns()
@@ -54,6 +56,25 @@ function ResearchHubContent() {
       }
     }
   }, [campaignId, campaigns])
+
+  // SMO Data Fetching Effects
+  useEffect(() => {
+    if (selectedCampaign && researchType === 'smo') {
+      fetchSMOTrends()
+    }
+  }, [selectedCampaign, researchType])
+
+  useEffect(() => {
+    if (selectedCampaign && researchType === 'hashtags') {
+      fetchHashtags()
+    }
+  }, [selectedCampaign, researchType])
+
+  useEffect(() => {
+    if (selectedCampaign && researchType === 'competitors') {
+      fetchCompetitors()
+    }
+  }, [selectedCampaign, researchType])
 
   const fetchCampaigns = async () => {
     try {
@@ -146,6 +167,52 @@ function ResearchHubContent() {
     if (safedifficulty < 30) return 'text-green-600'
     if (safedifficulty < 70) return 'text-yellow-600'
     return 'text-red-600'
+  }
+
+  // SMO Data Fetching Functions
+  const fetchSMOTrends = async () => {
+    try {
+      setIsLoadingSMO(true)
+      const response = await fetch('/api/smo/trends?category=fitness&timeframe=7d')
+      if (response.ok) {
+        const data = await response.json()
+        setSmoTrends(data.trends || [])
+      }
+    } catch (error) {
+      console.error('Error fetching SMO trends:', error)
+    } finally {
+      setIsLoadingSMO(false)
+    }
+  }
+
+  const fetchHashtags = async () => {
+    try {
+      setIsLoadingSMO(true)
+      const response = await fetch('/api/smo/hashtags?category=fitness&type=trending')
+      if (response.ok) {
+        const data = await response.json()
+        setHashtags(data.hashtags || [])
+      }
+    } catch (error) {
+      console.error('Error fetching hashtags:', error)
+    } finally {
+      setIsLoadingSMO(false)
+    }
+  }
+
+  const fetchCompetitors = async () => {
+    try {
+      setIsLoadingSMO(true)
+      const response = await fetch('/api/smo/competitors?industry=fitness&limit=5')
+      if (response.ok) {
+        const data = await response.json()
+        setCompetitorData(data.competitors || [])
+      }
+    } catch (error) {
+      console.error('Error fetching competitors:', error)
+    } finally {
+      setIsLoadingSMO(false)
+    }
   }
 
   return (
@@ -408,34 +475,56 @@ function ResearchHubContent() {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Social Media Trends</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[
-                      { trend: '30-Day Fitness Challenge', platform: 'Instagram', engagement: '2.3M', growth: '+125%' },
-                      { trend: 'Home Workout Setup', platform: 'YouTube', engagement: '1.8M', growth: '+89%' },
-                      { trend: 'Protein Recipe Hacks', platform: 'LinkedIn', engagement: '450K', growth: '+67%' },
-                      { trend: 'Mindful Fitness', platform: 'Facebook', engagement: '890K', growth: '+201%' },
-                      { trend: 'Quick HIIT Sessions', platform: 'Instagram', engagement: '3.1M', growth: '+156%' },
-                      { trend: 'Fitness Motivation Quotes', platform: 'Pinterest', engagement: '720K', growth: '+94%' }
-                    ].map((item, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all">
-                        <h4 className="font-semibold text-gray-900 mb-2">{item.trend}</h4>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Platform:</span>
-                            <span className="font-medium">{item.platform}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Engagement:</span>
-                            <span className="font-medium text-blue-600">{item.engagement}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Growth:</span>
-                            <span className="font-medium text-green-600">{item.growth}</span>
+                  {isLoadingSMO ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-500">Loading SMO trends...</p>
+                    </div>
+                  ) : smoTrends.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {smoTrends.map((item, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all">
+                          <h4 className="font-semibold text-gray-900 mb-2">{item.trend}</h4>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Platform:</span>
+                              <span className="font-medium capitalize">{item.platform}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Engagement:</span>
+                              <span className="font-medium text-blue-600">{item.engagement}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500">Growth:</span>
+                              <span className="font-medium text-green-600">{item.growth}</span>
+                            </div>
+                            {item.hashtags && (
+                              <div className="mt-2">
+                                <span className="text-gray-500 text-xs">Top Hashtags:</span>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {item.hashtags.slice(0, 3).map((tag: string, i: number) => (
+                                    <span key={i} className="text-xs bg-blue-100 text-blue-800 px-1 rounded">
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                       </div>
-                    ))}
-                  </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No SMO Trends Found</h3>
+                      <p className="text-gray-500">Try adjusting your search criteria</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -445,65 +534,68 @@ function ResearchHubContent() {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">#️⃣ Hashtag Strategy</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Popular Hashtags */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">🔥 Trending Fitness Hashtags</h4>
-                      <div className="space-y-2">
-                        {[
-                          { tag: '#FitnessMotivation', posts: '15.2M', difficulty: 'High' },
-                          { tag: '#HomeWorkout', posts: '8.7M', difficulty: 'Medium' },
-                          { tag: '#FitnessTips', posts: '12.1M', difficulty: 'High' },
-                          { tag: '#WorkoutRoutine', posts: '6.3M', difficulty: 'Medium' },
-                          { tag: '#FitnessJourney', posts: '9.8M', difficulty: 'Medium' },
-                          { tag: '#HealthyLifestyle', posts: '18.5M', difficulty: 'High' }
-                        ].map((hashtag, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div>
-                              <span className="font-medium text-blue-600">{hashtag.tag}</span>
-                              <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
-                            </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
-                              hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {hashtag.difficulty}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                  {isLoadingSMO ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-500">Loading hashtag data...</p>
                     </div>
+                  ) : hashtags.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Popular Hashtags */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3">🔥 Trending Fitness Hashtags</h4>
+                        <div className="space-y-2">
+                          {hashtags.slice(0, 6).map((hashtag, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <span className="font-medium text-blue-600">{hashtag.tag}</span>
+                                <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
+                              </div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
+                                hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {hashtag.difficulty}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
-                    {/* Niche Hashtags */}
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">🎯 Niche Opportunity Hashtags</h4>
-                      <div className="space-y-2">
-                        {[
-                          { tag: '#FitGlideWorkout', posts: '12K', difficulty: 'Low' },
-                          { tag: '#SmartFitness', posts: '89K', difficulty: 'Low' },
-                          { tag: '#HomeGymLife', posts: '234K', difficulty: 'Medium' },
-                          { tag: '#FitnessAppReview', posts: '45K', difficulty: 'Low' },
-                          { tag: '#WorkoutTracker', posts: '167K', difficulty: 'Medium' },
-                          { tag: '#FitnessGoals2024', posts: '378K', difficulty: 'Medium' }
-                        ].map((hashtag, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div>
-                              <span className="font-medium text-blue-600">{hashtag.tag}</span>
-                              <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
+                      {/* Niche Hashtags */}
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-3">🎯 Niche Opportunity Hashtags</h4>
+                        <div className="space-y-2">
+                          {hashtags.slice(6, 12).map((hashtag, index) => (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <span className="font-medium text-blue-600">{hashtag.tag}</span>
+                                <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
+                              </div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
+                                hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {hashtag.difficulty}
+                              </span>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
-                              hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {hashtag.difficulty}
-                            </span>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Hashtag Data Found</h3>
+                      <p className="text-gray-500">Try adjusting your search criteria</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -590,73 +682,75 @@ function ResearchHubContent() {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">🕵️ Competitor Social Analysis</h3>
-                  <div className="space-y-4">
-                    {[
-                      {
-                        name: 'MyFitnessPal',
-                        followers: '2.1M',
-                        engagement: '4.2%',
-                        topContent: 'Nutrition tips, User stories',
-                        platforms: ['Instagram', 'Facebook', 'YouTube'],
-                        strength: 'Community engagement'
-                      },
-                      {
-                        name: 'Nike Training Club',
-                        followers: '3.8M',
-                        engagement: '5.1%',
-                        topContent: 'Workout videos, Athlete features',
-                        platforms: ['Instagram', 'YouTube', 'Twitter'],
-                        strength: 'High-quality video content'
-                      },
-                      {
-                        name: 'Sweat',
-                        followers: '1.2M',
-                        engagement: '6.3%',
-                        topContent: 'Female fitness, Transformation stories',
-                        platforms: ['Instagram', 'YouTube'],
-                        strength: 'Niche targeting'
-                      },
-                      {
-                        name: 'Freeletics',
-                        followers: '890K',
-                        engagement: '3.8%',
-                        topContent: 'Bodyweight workouts, Challenges',
-                        platforms: ['Instagram', 'Facebook'],
-                        strength: 'Community challenges'
-                      }
-                    ].map((competitor, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-all">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900">{competitor.name}</h4>
-                          <div className="flex gap-2">
-                            {competitor.platforms.map((platform, i) => (
-                              <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                {platform}
-                              </span>
-                            ))}
+                  {isLoadingSMO ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-500">Loading competitor data...</p>
+                    </div>
+                  ) : competitorData.length > 0 ? (
+                    <div className="space-y-4">
+                      {competitorData.map((competitor, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-all">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-gray-900">{competitor.name}</h4>
+                            <div className="flex gap-2">
+                              {competitor.platforms.map((platform: string, i: number) => (
+                                <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full capitalize">
+                                  {platform}
+                                </span>
+                              ))}
+                            </div>
                           </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-500">Followers:</span>
+                              <div className="font-medium">{competitor.followers}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Engagement:</span>
+                              <div className="font-medium text-green-600">{competitor.engagement}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Top Content:</span>
+                              <div className="font-medium text-gray-900">{competitor.topContent}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Strength:</span>
+                              <div className="font-medium text-blue-600">{competitor.strength}</div>
+                            </div>
+                          </div>
+                          {competitor.recentPosts && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <div className="grid grid-cols-3 gap-4 text-xs">
+                                <div>
+                                  <span className="text-gray-500">Recent Posts:</span>
+                                  <div className="font-medium">{competitor.recentPosts}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Avg Likes:</span>
+                                  <div className="font-medium">{competitor.avgLikes}</div>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Avg Comments:</span>
+                                  <div className="font-medium">{competitor.avgComments}</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-500">Followers:</span>
-                            <div className="font-medium">{competitor.followers}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Engagement:</span>
-                            <div className="font-medium text-green-600">{competitor.engagement}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Top Content:</span>
-                            <div className="font-medium">{competitor.topContent}</div>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Strength:</span>
-                            <div className="font-medium text-blue-600">{competitor.strength}</div>
-                          </div>
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                       </div>
-                    ))}
-                  </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Competitor Data Found</h3>
+                      <p className="text-gray-500">Try adjusting your search criteria</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
