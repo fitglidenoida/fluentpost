@@ -458,12 +458,41 @@ export default function CampaignsHub() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="">Select primary goal...</option>
-                      <option value="Brand Awareness">Brand Awareness</option>
-                      <option value="Lead Generation">Lead Generation</option>
-                      <option value="Sales Conversion">Sales Conversion</option>
-                      <option value="Mobile App Downloads">📱 Mobile App Downloads</option>
-                      <option value="Community Building">Community Building</option>
-                      <option value="Content Education">Content Education</option>
+                      
+                      {/* SEO Goals */}
+                      <optgroup label="🔍 SEO & Content Marketing">
+                        <option value="Brand Awareness">Brand Awareness</option>
+                        <option value="Lead Generation">Lead Generation</option>
+                        <option value="Sales Conversion">Sales Conversion</option>
+                        <option value="Content Education">Content Education</option>
+                      </optgroup>
+                      
+                      {/* SMO Goals */}
+                      <optgroup label="📱 Social Media Marketing (SMO)">
+                        <option value="Social Media Growth">📈 Social Media Growth</option>
+                        <option value="Viral Content">🔥 Viral Content Creation</option>
+                        <option value="Influencer Partnerships">🤝 Influencer Partnerships</option>
+                        <option value="Community Engagement">💬 Community Engagement</option>
+                        <option value="User Generated Content">📸 User Generated Content</option>
+                        <option value="Social Media Awareness">🌟 Social Media Brand Awareness</option>
+                      </optgroup>
+                      
+                      {/* App Marketing Goals */}
+                      <optgroup label="📱 App Marketing">
+                        <option value="Mobile App Downloads">📱 Mobile App Downloads</option>
+                        <option value="App Store Optimization">🏪 App Store Optimization (ASO)</option>
+                        <option value="User Acquisition">👥 User Acquisition</option>
+                        <option value="App Retention">🔄 User Retention & Engagement</option>
+                        <option value="App Reviews">⭐ App Store Reviews & Ratings</option>
+                        <option value="Cross Platform Promotion">🔗 Cross-Platform App Promotion</option>
+                      </optgroup>
+                      
+                      {/* Hybrid Goals */}
+                      <optgroup label="🎯 Integrated Marketing">
+                        <option value="Omnichannel Marketing">🌐 Omnichannel Marketing</option>
+                        <option value="Website to App Funnel">🔄 Website → App Download Funnel</option>
+                        <option value="Community Building">🏘️ Community Building</option>
+                      </optgroup>
                     </select>
                   </div>
 
@@ -576,31 +605,100 @@ export default function CampaignsHub() {
                   {/* Platforms */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Target Platforms</label>
-                    {(newCampaign.platforms || ['']).map((platform, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input 
-                          type="text"
-                          value={platform}
-                          onChange={(e) => updateArrayField('platforms', index, e.target.value)}
-                          placeholder="e.g., Instagram, YouTube, TikTok"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {index > 0 && (
-                          <button 
-                            onClick={() => removeArrayField('platforms', index)}
-                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded-lg"
-                          >
-                            ✕
-                          </button>
-                        )}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Social Media Platforms */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">📱 Social Media (SMO)</h4>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'instagram', label: '📸 Instagram', desc: 'Posts, Stories, Reels, IGTV' },
+                            { id: 'youtube', label: '🎥 YouTube', desc: 'Videos, Shorts, Community' },
+                            { id: 'facebook', label: '👥 Facebook', desc: 'Posts, Groups, Events' },
+                            { id: 'linkedin', label: '💼 LinkedIn', desc: 'Professional networking' },
+                            { id: 'twitter', label: '🐦 Twitter/X', desc: 'Tweets, Threads, Spaces' },
+                            { id: 'pinterest', label: '📌 Pinterest', desc: 'Pins, Boards, Ideas' }
+                          ].map((platform) => (
+                            <label key={platform.id} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={(newCampaign.platforms || []).includes(platform.label)}
+                                onChange={(e) => {
+                                  const platforms = newCampaign.platforms || []
+                                  if (e.target.checked) {
+                                    setNewCampaign({...newCampaign, platforms: [...platforms, platform.label]})
+                                  } else {
+                                    setNewCampaign({...newCampaign, platforms: platforms.filter(p => p !== platform.label)})
+                                  }
+                                }}
+                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{platform.label}</div>
+                                <div className="text-xs text-gray-500">{platform.desc}</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                    <button 
-                      onClick={() => addArrayField('platforms')}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      + Add Platform
-                    </button>
+
+                      {/* App Marketing Platforms */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">📱 App Marketing</h4>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'app-store', label: '🍎 Apple App Store', desc: 'iOS app optimization' },
+                            { id: 'google-play', label: '🤖 Google Play Store', desc: 'Android app optimization' },
+                            { id: 'website', label: '🌐 Website/Blog', desc: 'Organic traffic conversion' },
+                            { id: 'email', label: '📧 Email Marketing', desc: 'Newsletter campaigns' },
+                            { id: 'push-notifications', label: '🔔 Push Notifications', desc: 'In-app engagement' },
+                            { id: 'fitness-forums', label: '🏋️ Fitness Forums', desc: 'Community engagement' }
+                          ].map((platform) => (
+                            <label key={platform.id} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={(newCampaign.platforms || []).includes(platform.label)}
+                                onChange={(e) => {
+                                  const platforms = newCampaign.platforms || []
+                                  if (e.target.checked) {
+                                    setNewCampaign({...newCampaign, platforms: [...platforms, platform.label]})
+                                  } else {
+                                    setNewCampaign({...newCampaign, platforms: platforms.filter(p => p !== platform.label)})
+                                  }
+                                }}
+                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                              />
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{platform.label}</div>
+                                <div className="text-xs text-gray-500">{platform.desc}</div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Selected Platforms Display */}
+                    {(newCampaign.platforms || []).length > 0 && (
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <h5 className="text-sm font-medium text-blue-900 mb-2">Selected Platforms:</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {(newCampaign.platforms || []).map((platform, index) => (
+                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full flex items-center gap-1">
+                              {platform}
+                              <button
+                                onClick={() => {
+                                  const platforms = newCampaign.platforms || []
+                                  setNewCampaign({...newCampaign, platforms: platforms.filter(p => p !== platform)})
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

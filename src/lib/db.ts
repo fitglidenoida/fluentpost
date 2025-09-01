@@ -462,11 +462,11 @@ const initializeFitGlideData = () => {
       `, [keywordId, websiteId, kw.keyword, kw.searchVolume, kw.difficulty, 60, kw.intent, 'active']);
     });
     
-    // Create a default campaign for FitGlide
-    const existingCampaign = dbHelpers.queryFirst('SELECT * FROM Campaign WHERE userId = ?', ['fitglide-user']);
-    if (!existingCampaign) {
+    // Create default campaigns for FitGlide
+    const existingCampaigns = dbHelpers.query('SELECT * FROM Campaign WHERE userId = ?', ['fitglide-user']);
+    if (existingCampaigns.length === 0) {
       dbHelpers.execute(`
-        INSERT INTO Campaign (
+        INSERT OR IGNORE INTO Campaign (
           id, userId, name, description, goal, objectives, targetAudience, 
           budget, duration, startDate, endDate, contentPillars, keywords, 
           contentTypes, platforms, status, createdAt, updatedAt
@@ -521,7 +521,7 @@ const initializeFitGlideData = () => {
 
       // Create a mobile app downloads campaign
       dbHelpers.execute(`
-        INSERT INTO Campaign (
+        INSERT OR IGNORE INTO Campaign (
           id, userId, name, description, goal, objectives, targetAudience, 
           budget, duration, startDate, endDate, contentPillars, keywords, 
           contentTypes, platforms, status, createdAt, updatedAt
@@ -568,13 +568,137 @@ const initializeFitGlideData = () => {
           'App Tutorial Videos'
         ]),
         JSON.stringify([
-          'Instagram',
-          'TikTok',
-          'YouTube',
-          'Facebook',
-          'App Store',
-          'Google Play Store',
-          'Fitness Forums'
+          '🍎 Apple App Store',
+          '🤖 Google Play Store',
+          '📸 Instagram',
+          '🎥 YouTube',
+          '👥 Facebook',
+          '🌐 Website/Blog'
+        ]),
+        'planning'
+      ]);
+
+      // Create a Social Media Growth campaign (SMO)
+      dbHelpers.execute(`
+        INSERT OR IGNORE INTO Campaign (
+          id, userId, name, description, goal, objectives, targetAudience, 
+          budget, duration, startDate, endDate, contentPillars, keywords, 
+          contentTypes, platforms, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [
+        'fitglide-smo-2024',
+        'fitglide-user',
+        'FitGlide Social Media Growth Strategy',
+        'Build massive social media presence across Instagram, YouTube, and LinkedIn to establish FitGlide as the fitness authority',
+        'Social Media Growth',
+        JSON.stringify([
+          'Reach 100K Instagram followers within 6 months',
+          'Generate 1M+ views on YouTube fitness content',
+          'Achieve 50K LinkedIn connections in fitness industry',
+          'Create 10 viral fitness challenge videos',
+          'Build community of 25K engaged fitness enthusiasts'
+        ]),
+        'Fitness influencers, gym-goers, personal trainers, fitness enthusiasts aged 20-45, health-conscious professionals',
+        8000,
+        '8 months',
+        '2024-02-01',
+        '2024-09-30',
+        JSON.stringify([
+          'Viral Fitness Challenges',
+          'Workout Tutorials',
+          'Transformation Stories',
+          'Fitness Motivation',
+          'Nutrition Tips',
+          'Behind the Scenes',
+          'Community Spotlights'
+        ]),
+        JSON.stringify([
+          'fitness challenge',
+          'viral workout',
+          'home fitness',
+          'fitness transformation',
+          'workout motivation',
+          'fitness community',
+          'gym workouts',
+          'fitness influencer',
+          'workout videos'
+        ]),
+        JSON.stringify([
+          'Instagram Reels',
+          'Instagram Stories',
+          'Instagram Posts',
+          'YouTube Shorts',
+          'YouTube Tutorials',
+          'LinkedIn Articles',
+          'Facebook Groups',
+          'Live Workouts',
+          'User Generated Content'
+        ]),
+        JSON.stringify([
+          '📸 Instagram',
+          '🎥 YouTube',
+          '💼 LinkedIn',
+          '👥 Facebook',
+          '🏋️ Fitness Forums'
+        ]),
+        'active'
+      ]);
+
+      // Create an Influencer Partnership campaign
+      dbHelpers.execute(`
+        INSERT OR IGNORE INTO Campaign (
+          id, userId, name, description, goal, objectives, targetAudience, 
+          budget, duration, startDate, endDate, contentPillars, keywords, 
+          contentTypes, platforms, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [
+        'fitglide-influencer-2024',
+        'fitglide-user',
+        'FitGlide Influencer Partnership Program',
+        'Partner with top fitness influencers to showcase FitGlide app and drive authentic user acquisition',
+        'Influencer Partnerships',
+        JSON.stringify([
+          'Partner with 50+ fitness influencers (micro and macro)',
+          'Generate 500K+ impressions through influencer content',
+          'Achieve 5,000 app downloads from influencer campaigns',
+          'Create authentic user testimonials and reviews',
+          'Build long-term brand ambassador relationships'
+        ]),
+        'Followers of fitness influencers, fitness enthusiasts seeking authentic recommendations, social media active fitness community',
+        15000,
+        '12 months',
+        '2024-03-01',
+        '2025-02-28',
+        JSON.stringify([
+          'App Demonstrations',
+          'Authentic Reviews',
+          'Workout Challenges',
+          'Transformation Stories',
+          'Behind the Scenes',
+          'Lifestyle Integration'
+        ]),
+        JSON.stringify([
+          'fitness influencer',
+          'app review',
+          'fitness app partnership',
+          'workout app',
+          'fitness community',
+          'influencer marketing',
+          'fitness collaboration'
+        ]),
+        JSON.stringify([
+          'Influencer Reviews',
+          'Sponsored Posts',
+          'Story Takeovers',
+          'Live Demonstrations',
+          'Challenge Participation',
+          'Testimonial Videos'
+        ]),
+        JSON.stringify([
+          '📸 Instagram',
+          '🎥 YouTube',
+          '👥 Facebook',
+          '💼 LinkedIn'
         ]),
         'planning'
       ]);
