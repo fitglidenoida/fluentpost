@@ -34,6 +34,12 @@ function ResearchHubContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
+  
+  // SMO Research States
+  const [researchType, setResearchType] = useState<'seo' | 'smo' | 'trending' | 'hashtags' | 'competitors'>('seo')
+  const [hashtags, setHashtags] = useState<any[]>([])
+  const [trendingTopics, setTrendingTopics] = useState<any[]>([])
+  const [competitorData, setCompetitorData] = useState<any[]>([])
 
   useEffect(() => {
     fetchCampaigns()
@@ -151,7 +157,7 @@ function ResearchHubContent() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">🔍 Campaign Research Hub</h1>
-            <p className="text-gray-600 text-lg">Strategic keyword research within campaign context</p>
+            <p className="text-gray-600 text-lg">SEO keywords, SMO trends, hashtags, and competitor analysis</p>
           </div>
           
           {!selectedCampaign && (
@@ -252,12 +258,43 @@ function ResearchHubContent() {
               </div>
             </div>
 
-            {/* Keyword Research Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Search Panel */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🔍 Keyword Research</h3>
+            {/* Research Type Tabs */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+              <div className="border-b border-gray-200">
+                <nav className="flex space-x-8 px-6" aria-label="Tabs">
+                  {[
+                    { id: 'seo', label: '🔍 SEO Keywords', desc: 'Traditional keyword research' },
+                    { id: 'smo', label: '📱 SMO Trends', desc: 'Social media trending topics' },
+                    { id: 'hashtags', label: '#️⃣ Hashtags', desc: 'Platform-specific hashtag research' },
+                    { id: 'trending', label: '🔥 Viral Topics', desc: 'Trending fitness content' },
+                    { id: 'competitors', label: '🕵️ Competitors', desc: 'Competitor analysis' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setResearchType(tab.id as any)}
+                      className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                        researchType === tab.id
+                          ? 'border-blue-500 text-blue-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div>{tab.label}</div>
+                        <div className="text-xs text-gray-400">{tab.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
+            {/* Research Content Based on Selected Tab */}
+            {researchType === 'seo' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Search Panel */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">🔍 SEO Keyword Research</h3>
                   
                   <div className="space-y-4">
                     <div>
@@ -364,6 +401,265 @@ function ResearchHubContent() {
                 </div>
               </div>
             </div>
+            )}
+
+            {/* SMO Trends Research */}
+            {researchType === 'smo' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Social Media Trends</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      { trend: '30-Day Fitness Challenge', platform: 'Instagram', engagement: '2.3M', growth: '+125%' },
+                      { trend: 'Home Workout Setup', platform: 'YouTube', engagement: '1.8M', growth: '+89%' },
+                      { trend: 'Protein Recipe Hacks', platform: 'LinkedIn', engagement: '450K', growth: '+67%' },
+                      { trend: 'Mindful Fitness', platform: 'Facebook', engagement: '890K', growth: '+201%' },
+                      { trend: 'Quick HIIT Sessions', platform: 'Instagram', engagement: '3.1M', growth: '+156%' },
+                      { trend: 'Fitness Motivation Quotes', platform: 'Pinterest', engagement: '720K', growth: '+94%' }
+                    ].map((item, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all">
+                        <h4 className="font-semibold text-gray-900 mb-2">{item.trend}</h4>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Platform:</span>
+                            <span className="font-medium">{item.platform}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Engagement:</span>
+                            <span className="font-medium text-blue-600">{item.engagement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Growth:</span>
+                            <span className="font-medium text-green-600">{item.growth}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Hashtag Research */}
+            {researchType === 'hashtags' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">#️⃣ Hashtag Strategy</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Popular Hashtags */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">🔥 Trending Fitness Hashtags</h4>
+                      <div className="space-y-2">
+                        {[
+                          { tag: '#FitnessMotivation', posts: '15.2M', difficulty: 'High' },
+                          { tag: '#HomeWorkout', posts: '8.7M', difficulty: 'Medium' },
+                          { tag: '#FitnessTips', posts: '12.1M', difficulty: 'High' },
+                          { tag: '#WorkoutRoutine', posts: '6.3M', difficulty: 'Medium' },
+                          { tag: '#FitnessJourney', posts: '9.8M', difficulty: 'Medium' },
+                          { tag: '#HealthyLifestyle', posts: '18.5M', difficulty: 'High' }
+                        ].map((hashtag, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <span className="font-medium text-blue-600">{hashtag.tag}</span>
+                              <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
+                            </div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
+                              hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {hashtag.difficulty}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Niche Hashtags */}
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">🎯 Niche Opportunity Hashtags</h4>
+                      <div className="space-y-2">
+                        {[
+                          { tag: '#FitGlideWorkout', posts: '12K', difficulty: 'Low' },
+                          { tag: '#SmartFitness', posts: '89K', difficulty: 'Low' },
+                          { tag: '#HomeGymLife', posts: '234K', difficulty: 'Medium' },
+                          { tag: '#FitnessAppReview', posts: '45K', difficulty: 'Low' },
+                          { tag: '#WorkoutTracker', posts: '167K', difficulty: 'Medium' },
+                          { tag: '#FitnessGoals2024', posts: '378K', difficulty: 'Medium' }
+                        ].map((hashtag, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <span className="font-medium text-blue-600">{hashtag.tag}</span>
+                              <span className="text-sm text-gray-500 ml-2">{hashtag.posts} posts</span>
+                            </div>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              hashtag.difficulty === 'High' ? 'bg-red-100 text-red-800' : 
+                              hashtag.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {hashtag.difficulty}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Viral Topics Research */}
+            {researchType === 'trending' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🔥 Viral Content Opportunities</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {[
+                      {
+                        title: '7-Day Abs Challenge',
+                        virality: 'Extremely High',
+                        platforms: ['Instagram', 'YouTube'],
+                        engagement: '4.2M views',
+                        timeframe: 'Next 30 days',
+                        difficulty: 'Medium'
+                      },
+                      {
+                        title: 'Desk Workout Breaks',
+                        virality: 'High',
+                        platforms: ['LinkedIn', 'YouTube'],
+                        engagement: '1.8M views',
+                        timeframe: 'Q1 2024',
+                        difficulty: 'Low'
+                      },
+                      {
+                        title: 'Fitness Transformation Story',
+                        virality: 'High',
+                        platforms: ['Instagram', 'Facebook'],
+                        engagement: '2.1M views',
+                        timeframe: 'Ongoing',
+                        difficulty: 'High'
+                      },
+                      {
+                        title: 'Equipment-Free Workouts',
+                        virality: 'Medium',
+                        platforms: ['YouTube', 'TikTok'],
+                        engagement: '980K views',
+                        timeframe: 'Next 60 days',
+                        difficulty: 'Low'
+                      }
+                    ].map((topic, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all">
+                        <h4 className="font-semibold text-gray-900 mb-3">{topic.title}</h4>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Virality:</span>
+                            <span className={`font-medium ${
+                              topic.virality === 'Extremely High' ? 'text-red-600' :
+                              topic.virality === 'High' ? 'text-orange-600' : 'text-yellow-600'
+                            }`}>{topic.virality}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Platforms:</span>
+                            <span className="font-medium">{topic.platforms.join(', ')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Engagement:</span>
+                            <span className="font-medium text-blue-600">{topic.engagement}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Best Time:</span>
+                            <span className="font-medium">{topic.timeframe}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Difficulty:</span>
+                            <span className={`font-medium ${
+                              topic.difficulty === 'High' ? 'text-red-600' :
+                              topic.difficulty === 'Medium' ? 'text-yellow-600' : 'text-green-600'
+                            }`}>{topic.difficulty}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Competitor Analysis */}
+            {researchType === 'competitors' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🕵️ Competitor Social Analysis</h3>
+                  <div className="space-y-4">
+                    {[
+                      {
+                        name: 'MyFitnessPal',
+                        followers: '2.1M',
+                        engagement: '4.2%',
+                        topContent: 'Nutrition tips, User stories',
+                        platforms: ['Instagram', 'Facebook', 'YouTube'],
+                        strength: 'Community engagement'
+                      },
+                      {
+                        name: 'Nike Training Club',
+                        followers: '3.8M',
+                        engagement: '5.1%',
+                        topContent: 'Workout videos, Athlete features',
+                        platforms: ['Instagram', 'YouTube', 'Twitter'],
+                        strength: 'High-quality video content'
+                      },
+                      {
+                        name: 'Sweat',
+                        followers: '1.2M',
+                        engagement: '6.3%',
+                        topContent: 'Female fitness, Transformation stories',
+                        platforms: ['Instagram', 'YouTube'],
+                        strength: 'Niche targeting'
+                      },
+                      {
+                        name: 'Freeletics',
+                        followers: '890K',
+                        engagement: '3.8%',
+                        topContent: 'Bodyweight workouts, Challenges',
+                        platforms: ['Instagram', 'Facebook'],
+                        strength: 'Community challenges'
+                      }
+                    ].map((competitor, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-all">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900">{competitor.name}</h4>
+                          <div className="flex gap-2">
+                            {competitor.platforms.map((platform, i) => (
+                              <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                {platform}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500">Followers:</span>
+                            <div className="font-medium">{competitor.followers}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Engagement:</span>
+                            <div className="font-medium text-green-600">{competitor.engagement}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Top Content:</span>
+                            <div className="font-medium">{competitor.topContent}</div>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Strength:</span>
+                            <div className="font-medium text-blue-600">{competitor.strength}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
