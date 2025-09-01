@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-
-const trendsRequestSchema = z.object({
-  platform: z.enum(['instagram', 'youtube', 'linkedin', 'facebook', 'pinterest']).optional(),
-  category: z.string().optional(),
-  timeframe: z.enum(['24h', '7d', '30d']).optional()
-})
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +7,6 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || 'fitness'
     const timeframe = searchParams.get('timeframe') || '7d'
 
-    // Validate parameters
-    const validatedParams = trendsRequestSchema.parse({
-      platform,
-      category,
-      timeframe
-    })
-
     // TODO: Replace with real API calls to:
     // - Google Trends API for trending topics
     // - Social media APIs for platform-specific trends
@@ -28,14 +14,14 @@ export async function GET(request: NextRequest) {
     // - YouTube API for trending videos
 
     // For now, return realistic mock data based on parameters
-    const mockTrends = generateMockTrends(validatedParams)
+    const mockTrends = generateMockTrends({ platform, category, timeframe })
 
     return NextResponse.json({
       success: true,
       trends: mockTrends,
-      platform: validatedParams.platform,
-      category: validatedParams.category,
-      timeframe: validatedParams.timeframe
+      platform,
+      category,
+      timeframe
     })
   } catch (error: any) {
     console.error('SMO Trends API Error:', error)

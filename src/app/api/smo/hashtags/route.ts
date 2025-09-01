@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-
-const hashtagRequestSchema = z.object({
-  platform: z.enum(['instagram', 'youtube', 'linkedin', 'facebook', 'tiktok']).optional(),
-  category: z.string().optional(),
-  type: z.enum(['trending', 'niche', 'branded']).optional()
-})
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +7,6 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || 'fitness'
     const type = searchParams.get('type') || 'trending'
 
-    // Validate parameters
-    const validatedParams = hashtagRequestSchema.parse({
-      platform,
-      category,
-      type
-    })
-
     // TODO: Replace with real API calls to:
     // - Instagram API for hashtag data
     // - Twitter API for trending hashtags
@@ -28,14 +14,14 @@ export async function GET(request: NextRequest) {
     // - Hashtag research tools APIs
 
     // For now, return realistic mock data based on parameters
-    const mockHashtags = generateMockHashtags(validatedParams)
+    const mockHashtags = generateMockHashtags({ platform, category, type })
 
     return NextResponse.json({
       success: true,
       hashtags: mockHashtags,
-      platform: validatedParams.platform,
-      category: validatedParams.category,
-      type: validatedParams.type
+      platform,
+      category,
+      type
     })
   } catch (error: any) {
     console.error('SMO Hashtags API Error:', error)

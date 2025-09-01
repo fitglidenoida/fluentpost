@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-
-const competitorRequestSchema = z.object({
-  industry: z.string().optional(),
-  platform: z.enum(['instagram', 'youtube', 'linkedin', 'facebook']).optional(),
-  limit: z.number().min(1).max(20).optional()
-})
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,13 +7,6 @@ export async function GET(request: NextRequest) {
     const platform = searchParams.get('platform')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    // Validate parameters
-    const validatedParams = competitorRequestSchema.parse({
-      industry,
-      platform,
-      limit
-    })
-
     // TODO: Replace with real API calls to:
     // - Social media APIs for competitor data
     // - Social listening tools APIs
@@ -28,13 +14,13 @@ export async function GET(request: NextRequest) {
     // - Web scraping for public social data
 
     // For now, return realistic mock data based on parameters
-    const mockCompetitors = generateMockCompetitors(validatedParams)
+    const mockCompetitors = generateMockCompetitors({ industry, platform, limit })
 
     return NextResponse.json({
       success: true,
       competitors: mockCompetitors,
-      industry: validatedParams.industry,
-      platform: validatedParams.platform,
+      industry,
+      platform,
       total: mockCompetitors.length
     })
   } catch (error: any) {
